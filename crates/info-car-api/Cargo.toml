@@ -1,0 +1,14 @@
+[package]
+name = "info-car-api"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+chrono = "0.4.38"
+regex = "1.10.6"
+reqwest = { version = "0.12.7", features = ["json", "rustls-tls"] }
+rustls = "0.23.12"
+scraper = "0.20.0"
+serde = { version = "1.0.209", features = ["derive"] }
+serde-aux = "4.5.0"
+thiserror = "1.0.63"
