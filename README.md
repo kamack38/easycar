@@ -10,6 +10,14 @@ Copy the `.env.example` file to `.env` and fill the `TOKEN` var with your Bearer
 cargo run
 ```
 
+## Building
+
+```bash
+cargo build --release
+```
+
+Then place all required vars in a `.env` file 
+
 ## TODO
 
 - [ ] Username and password login
