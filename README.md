@@ -13,4 +13,4 @@ cargo run
 ## TODO
 
 - [ ] Username and password login
-- [ ] Separate library crate
+- [x] Separate library crate
