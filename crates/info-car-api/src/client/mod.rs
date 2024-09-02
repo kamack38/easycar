@@ -5,7 +5,7 @@ pub mod word_centers;
 
 use std::collections::HashMap;
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Duration, Utc};
 use reqwest::{Client, ClientBuilder};
 use scraper::{Html, Selector};
 use serde::Deserialize;
@@ -22,6 +22,7 @@ use self::{
 pub struct InfoCarClient {
     client: Client,
     token: Option<String>,
+    pub token_expire_date: Option<DateTime<Utc>>,
 }
 
 #[derive(Error, Debug)]
@@ -60,8 +61,12 @@ pub enum RefreshTokenError {
     NoFragmentProvided,
     #[error(transparent)]
     UrlFragmentParseError(#[from] serde_urlencoded::de::Error),
-    #[error("The session_id was not set")]
-    SessionIdNotSet,
+    #[error("The access token was not provided in the response")]
+    AccessTokenNotProvided,
+    #[error("The expire time was not provided in the response")]
+    ExpireTimeNotProvided,
+    #[error("Could not parse the expire time as a number")]
+    ExpireTimeParseError,
 }
 
 #[derive(Error, Debug)]
@@ -85,6 +90,7 @@ impl InfoCarClient {
                 .build()
                 .unwrap(),
             token: None,
+            token_expire_date: None,
         }
     }
 
@@ -116,9 +122,21 @@ impl InfoCarClient {
                 .ok_or(RefreshTokenError::NoFragmentProvided)?,
         )?;
 
-        println!("{:#?}", parsed_response);
+        let new_token = parsed_response
+            .get("access_token")
+            .ok_or(RefreshTokenError::AccessTokenNotProvided)?;
 
-        let new_token = parsed_response.get("access_token").unwrap();
+        let expire_time_unix: i64 = parsed_response
+            .get("expires_in")
+            .ok_or(RefreshTokenError::ExpireTimeNotProvided)?
+            .parse()
+            .or(Err(RefreshTokenError::ExpireTimeParseError))?;
+
+        let expire_date = Utc::now()
+            .checked_add_signed(Duration::seconds(expire_time_unix))
+            .unwrap();
+
+        self.token_expire_date = Some(expire_date);
 
         self.set_token(new_token.to_owned());
 
