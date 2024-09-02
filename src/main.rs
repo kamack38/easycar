@@ -10,15 +10,12 @@ use tokio::time::{sleep, Duration};
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv().expect(".env file not found");
 
-    // let username = dotenvy::var("USERNAME")?;
-    // let password = dotenvy::var("PASSWORD")?;
-    let token = dotenvy::var("TOKEN")?;
+    let username = dotenvy::var("USERNAME")?;
+    let password = dotenvy::var("PASSWORD")?;
 
     let mut client = InfoCarClient::new();
-    // client.login(&username, &password).await;
-    client.set_token(token);
-    // println!("{:#?}", client.user_info().await);
-    // println!("{:#?}", client.word_centers().await);
+    client.login(&username, &password).await?;
+
     let mut last_id: String = "".to_owned();
     loop {
         let response = client
@@ -42,7 +39,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
             Err(err) => println!("{}", err),
-        }
+        };
 
         sleep(Duration::from_secs(10)).await;
     }

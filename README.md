@@ -20,5 +20,7 @@ Then place all required vars in a `.env` file
 
 ## TODO
 
-- [ ] Username and password login
+- [x] Username and password login
+- [x] Session refreshing
 - [x] Separate library crate
+- [ ] Exam signing
