@@ -132,11 +132,11 @@ impl InfoCarClient {
             .parse()
             .or(Err(RefreshTokenError::ExpireTimeParseError))?;
 
-        let expire_date = Utc::now()
-            .checked_add_signed(Duration::seconds(expire_time_unix))
-            .unwrap();
-
-        self.token_expire_date = Some(expire_date);
+        self.token_expire_date = Some(
+            Utc::now()
+                .checked_add_signed(Duration::seconds(expire_time_unix))
+                .unwrap(),
+        );
 
         self.set_token(new_token.to_owned());
 
