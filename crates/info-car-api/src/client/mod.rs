@@ -5,8 +5,9 @@ pub mod word_centers;
 use std::collections::HashMap;
 
 use chrono::{DateTime, Duration, Utc};
-use reqwest::{Client, ClientBuilder};
+use reqwest::ClientBuilder;
 use scraper::{Html, Selector};
+use serde::Deserialize;
 
 use self::{
     exam_schedule::ExamSchedule,
@@ -16,7 +17,6 @@ use self::{
 use crate::error::{
     handle_response, CsrfTokenError, GenericClientError, LoginError, RefreshTokenError,
 };
-use serde::Deserialize;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct UserInfo {
@@ -28,15 +28,15 @@ pub struct UserInfo {
     pub email: String,
 }
 
-pub struct InfoCarClient {
-    client: Client,
+pub struct Client {
+    client: reqwest::Client,
     token: Option<String>,
     pub token_expire_date: Option<DateTime<Utc>>,
 }
 
-impl InfoCarClient {
+impl Client {
     pub fn new() -> Self {
-        InfoCarClient {
+        Client {
             client: ClientBuilder::new()
                 .use_rustls_tls()
                 .cookie_store(true)

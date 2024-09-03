@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use chrono::{Days, Utc};
 use dotenvy::dotenv;
 use info_car_api::{
-    client::{reservations::LicenseCategory, InfoCarClient},
+    client::{reservations::LicenseCategory, Client},
     utils::find_first_non_empty_practice_exam,
 };
 use tokio::time::{sleep, Duration};
@@ -16,7 +16,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let password = dotenvy::var("PASSWORD")?;
     let webhook_url = dotenvy::var("WEBHOOK_URL")?;
 
-    let mut client = InfoCarClient::new();
+    let mut client = Client::new();
     let make_client = reqwest::Client::new();
     client.login(&username, &password).await?;
 
