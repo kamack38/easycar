@@ -1,4 +1,3 @@
-pub mod error;
 pub mod exam_schedule;
 pub mod reservations;
 pub mod word_centers;
@@ -8,38 +7,16 @@ use std::collections::HashMap;
 use chrono::{DateTime, Duration, Utc};
 use reqwest::{Client, ClientBuilder};
 use scraper::{Html, Selector};
-use serde::Deserialize;
-use thiserror::Error;
-use url;
 
 use self::{
-    error::{handle_response, JWTError},
     exam_schedule::ExamSchedule,
     reservations::{LicenseCategory, Reservations},
     word_centers::WordCenters,
 };
-
-pub struct InfoCarClient {
-    client: Client,
-    token: Option<String>,
-    pub token_expire_date: Option<DateTime<Utc>>,
-}
-
-#[derive(Error, Debug)]
-pub enum GenericError {
-    #[error("Bearer token not provided")]
-    NoBearer,
-    #[error(transparent)]
-    ReqwestError(#[from] reqwest::Error),
-    #[error(transparent)]
-    JWTError(#[from] JWTError),
-}
-
-#[derive(Error, Debug)]
-pub enum LoginError {
-    #[error(transparent)]
-    ReqwestError(#[from] reqwest::Error),
-}
+use crate::error::{
+    handle_response, CsrfTokenError, GenericClientError, LoginError, RefreshTokenError,
+};
+use serde::Deserialize;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct UserInfo {
@@ -51,34 +28,10 @@ pub struct UserInfo {
     pub email: String,
 }
 
-#[derive(Error, Debug)]
-pub enum RefreshTokenError {
-    #[error(transparent)]
-    ReqwestError(#[from] reqwest::Error),
-    #[error(transparent)]
-    UrlParseError(#[from] url::ParseError),
-    #[error("No fragment was provided in the response URL")]
-    NoFragmentProvided,
-    #[error(transparent)]
-    UrlFragmentParseError(#[from] serde_urlencoded::de::Error),
-    #[error("The access token was not provided in the response")]
-    AccessTokenNotProvided,
-    #[error("The expire time was not provided in the response")]
-    ExpireTimeNotProvided,
-    #[error("Could not parse the expire time as a number")]
-    ExpireTimeParseError,
-}
-
-#[derive(Error, Debug)]
-pub enum CsrfTokenError {
-    #[error(transparent)]
-    ReqwestError(#[from] reqwest::Error),
-    #[error(transparent)]
-    SelectorParseError(#[from] scraper::error::SelectorErrorKind<'static>),
-    #[error("The element containing the CSRF token could not be found")]
-    TokenNotFound,
-    #[error("The CSRF token value could not be found on the input element")]
-    TokenValueNotFound,
+pub struct InfoCarClient {
+    client: Client,
+    token: Option<String>,
+    pub token_expire_date: Option<DateTime<Utc>>,
 }
 
 impl InfoCarClient {
@@ -179,37 +132,37 @@ impl InfoCarClient {
             .send()
             .await?;
 
-        self.refresh_token().await.unwrap();
+        self.refresh_token().await?;
 
         Ok(())
     }
 
-    pub async fn user_info(&self) -> Result<UserInfo, GenericError> {
+    pub async fn user_info(&self) -> Result<UserInfo, GenericClientError> {
         Ok(self
             .client
             .get("https://info-car.pl/oauth2/userinfo")
-            .bearer_auth(self.token.as_ref().ok_or(GenericError::NoBearer)?)
+            .bearer_auth(self.token.as_ref().ok_or(GenericClientError::NoBearer)?)
             .send()
             .await?
             .json()
             .await?)
     }
 
-    pub async fn my_reservations(&self) -> Result<Reservations, GenericError> {
+    pub async fn my_reservations(&self) -> Result<Reservations, GenericClientError> {
         let response = self
             .client
             .get("https://info-car.pl/api/word/reservations")
-            .bearer_auth(self.token.as_ref().ok_or(GenericError::NoBearer)?)
+            .bearer_auth(self.token.as_ref().ok_or(GenericClientError::NoBearer)?)
             .send()
             .await?;
         Ok(handle_response(response)?.json().await?)
     }
 
-    pub async fn word_centers(&self) -> Result<WordCenters, GenericError> {
+    pub async fn word_centers(&self) -> Result<WordCenters, GenericClientError> {
         let response = self
             .client
             .get("https://info-car.pl/api/word/word-centers")
-            .bearer_auth(self.token.as_ref().ok_or(GenericError::NoBearer)?)
+            .bearer_auth(self.token.as_ref().ok_or(GenericClientError::NoBearer)?)
             .send()
             .await?;
         Ok(handle_response(response)?.json().await?)
@@ -221,7 +174,7 @@ impl InfoCarClient {
         end_date: DateTime<Utc>,
         start_date: DateTime<Utc>,
         category: LicenseCategory,
-    ) -> Result<ExamSchedule, GenericError> {
+    ) -> Result<ExamSchedule, GenericClientError> {
         let mut map = HashMap::<&str, String>::new();
         map.insert("category", category.to_string());
         map.insert("endDate", end_date.to_string());
@@ -231,7 +184,7 @@ impl InfoCarClient {
         let response = self
             .client
             .put("https://info-car.pl/api/word/word-centers/exam-schedule")
-            .bearer_auth(self.token.as_ref().ok_or(GenericError::NoBearer)?)
+            .bearer_auth(self.token.as_ref().ok_or(GenericClientError::NoBearer)?)
             .json(&map)
             .send()
             .await?;
