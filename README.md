@@ -24,4 +24,4 @@ Then place all required vars in a `.env` file
 - [x] Session refreshing
 - [x] Separate library crate
 - [x] Phone notifications via a webhook
-- [ ] Exam signing
+- [x] Exam signing

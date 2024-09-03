@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use serde_aux::field_attributes::deserialize_number_from_string;
 
-use super::reservations::LicenseCategory;
+use super::reservation::LicenseCategory;
 
 #[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]

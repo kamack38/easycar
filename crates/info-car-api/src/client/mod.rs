@@ -1,5 +1,5 @@
 pub mod exam_schedule;
-pub mod reservations;
+pub mod reservation;
 pub mod word_centers;
 
 use std::collections::HashMap;
@@ -11,7 +11,12 @@ use serde::Deserialize;
 
 use self::{
     exam_schedule::ExamSchedule,
-    reservations::{LicenseCategory, Reservations},
+    reservation::{
+        list::ReservationList,
+        new::{NewReservation, NewReservationResponse},
+        status::ReservationStatus,
+        LicenseCategory,
+    },
     word_centers::WordCenters,
 };
 use crate::error::{
@@ -148,7 +153,7 @@ impl Client {
             .await?)
     }
 
-    pub async fn my_reservations(&self) -> Result<Reservations, GenericClientError> {
+    pub async fn my_reservations(&self) -> Result<ReservationList, GenericClientError> {
         let response = self
             .client
             .get("https://info-car.pl/api/word/reservations")
@@ -189,5 +194,61 @@ impl Client {
             .send()
             .await?;
         Ok(handle_response(response)?.json().await?)
+    }
+
+    pub async fn new_reservation(
+        &self,
+        reservation: NewReservation,
+    ) -> Result<String, GenericClientError> {
+        let response = self
+            .client
+            .post("https://info-car.pl/api/word/reservations")
+            .bearer_auth(self.token.as_ref().ok_or(GenericClientError::NoBearer)?)
+            .json(&reservation)
+            .send()
+            .await?;
+
+        let reservation_id = handle_response(response)?
+            .json::<NewReservationResponse>()
+            .await?
+            .id;
+
+        Ok(reservation_id)
+    }
+
+    pub async fn reservation_status(
+        &self,
+        reservation_id: String,
+    ) -> Result<ReservationStatus, GenericClientError> {
+        let response = self
+            .client
+            .get(format!(
+                "https://info-car.pl/api/word/reservations/{reservation_id}"
+            ))
+            .bearer_auth(self.token.as_ref().ok_or(GenericClientError::NoBearer)?)
+            .send()
+            .await?;
+
+        // println!("{}", response.text().await?);
+
+        Ok(handle_response(response)?.json().await?)
+    }
+
+    pub async fn cancel_reservation(
+        &self,
+        reservation_id: String,
+    ) -> Result<(), GenericClientError> {
+        let response = self
+            .client
+            .post(format!(
+                "https://info-car.pl/api/word/reservations/{reservation_id}/cancel"
+            ))
+            .bearer_auth(self.token.as_ref().ok_or(GenericClientError::NoBearer)?)
+            .send()
+            .await?;
+
+        handle_response(response)?;
+
+        Ok(())
     }
 }
