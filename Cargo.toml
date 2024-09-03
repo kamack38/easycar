@@ -8,6 +8,7 @@ chrono = "0.4.38"
 dotenvy = "0.15.7"
 tokio = { version = "1.39.3", features = ["full"] }
 info-car-api = { version = "0.1.0", path = "./crates/info-car-api" }
+reqwest = "0.12.7"
 
 [profile.release]
 strip = true  # Automatically strip symbols from the binary.

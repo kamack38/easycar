@@ -342,6 +342,7 @@ dependencies = [
  "chrono",
  "dotenvy",
  "info-car-api",
+ "reqwest",
  "tokio",
 ]
 
