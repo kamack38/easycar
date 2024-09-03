@@ -1,12 +1,15 @@
 use std::collections::HashMap;
 
-use chrono::{Days, Utc};
+use chrono::{DateTime, Days, Duration as ChronoDuration, Utc};
 use dotenvy::dotenv;
 use info_car_api::{
     client::{reservation::LicenseCategory, Client},
     utils::find_first_non_empty_practice_exam,
 };
-use tokio::time::{sleep, Duration};
+use tokio::{
+    sync::mpsc,
+    time::{sleep, Duration as TokioDuration},
+};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -22,10 +25,47 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut client = Client::new();
     let make_client = reqwest::Client::new();
+
+    // Create a channel for sending the token expire date
+    let (tx, mut rx) = mpsc::channel::<DateTime<Utc>>(10);
+
+    // Create a channel for seding when to refresh the token
+    let (ty, mut ry) = mpsc::channel::<bool>(10);
+
     client.login(&username, &password).await?;
+    tx.send(
+        client
+            .token_expire_date
+            .expect("Expire date is not available"),
+    )
+    .await
+    .unwrap();
+
+    tokio::spawn(async move {
+        loop {
+            let expire_date = rx.recv().await.unwrap();
+            println!("Got token expire date: {expire_date}");
+            let duration = expire_date - Utc::now() - ChronoDuration::minutes(5);
+            println!("Token expires in: {}", duration.num_seconds());
+            sleep(TokioDuration::from_secs(
+                duration.num_seconds().try_into().unwrap(),
+            ))
+            .await;
+            println!("Sending refresh token signal...");
+            ty.send(true).await.unwrap();
+        }
+    });
 
     let mut last_id: String = "".to_owned();
     loop {
+        if ry.try_recv().is_ok() {
+            println!("Got refresh token signal. Refreshing...");
+            client.refresh_token().await.unwrap();
+            tx.send(client.token_expire_date.expect("Expire date is not set"))
+                .await
+                .unwrap();
+        }
+
         let response = client
             .exam_schedule(
                 osk_id.into(),
@@ -63,6 +103,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             Err(err) => println!("{}", err),
         };
 
-        sleep(Duration::from_secs(10)).await;
+        sleep(TokioDuration::from_secs(10)).await;
     }
 }
