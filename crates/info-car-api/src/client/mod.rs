@@ -121,8 +121,7 @@ impl Client {
     pub async fn login(&mut self, username: &str, password: &str) -> Result<(), LoginError> {
         let csrf_token = self
             .get_csrf_token("https://info-car.pl/oauth2/login")
-            .await
-            .unwrap();
+            .await?;
 
         let form_params = [
             ("username", username),

@@ -21,6 +21,8 @@ pub enum LoginError {
     ReqwestError(#[from] reqwest::Error),
     #[error(transparent)]
     TokenGetError(#[from] RefreshTokenError),
+    #[error(transparent)]
+    CsrfTokenError(#[from] CsrfTokenError),
 }
 
 #[derive(Error, Debug)]
