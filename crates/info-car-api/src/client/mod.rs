@@ -80,9 +80,9 @@ impl Client {
                 .ok_or(RefreshTokenError::NoFragmentProvided)?,
         )?;
 
-        let new_token = parsed_response
-            .get("access_token")
-            .ok_or(RefreshTokenError::AccessTokenNotProvided)?;
+        let Some(new_token) = parsed_response.get("access_token") else {
+            return Err(RefreshTokenError::AccessTokenNotProvided(parsed_response));
+        };
 
         let expire_time_unix: i64 = parsed_response
             .get("expires_in")

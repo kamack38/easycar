@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use regex::Regex;
 use reqwest::Response;
 use thiserror::Error;
@@ -31,8 +33,8 @@ pub enum RefreshTokenError {
     NoFragmentProvided,
     #[error(transparent)]
     UrlFragmentParseError(#[from] serde_urlencoded::de::Error),
-    #[error("The access token was not provided in the response")]
-    AccessTokenNotProvided,
+    #[error("The access token was not provided in the response. Response: {0:?}")]
+    AccessTokenNotProvided(HashMap<String, String>),
     #[error("The expire time was not provided in the response")]
     ExpireTimeNotProvided,
     #[error("Could not parse the expire time as a number")]
@@ -52,8 +54,34 @@ pub enum CsrfTokenError {
 }
 
 #[derive(Error, Debug)]
-#[error("Error ({0}): {1} ({2})")]
-pub struct JWTError(String, String, String);
+#[error("Error ({}): {} ({})", .0.error_type, .0.description, .0.url)]
+pub struct JWTError(JWTErrorMessage);
+
+#[derive(Debug)]
+pub struct JWTErrorMessage {
+    pub error_type: String,
+    pub description: String,
+    pub url: String,
+}
+
+impl From<Vec<String>> for JWTErrorMessage {
+    fn from(mut value: Vec<String>) -> Self {
+        if value.len() < 3 {
+            return JWTErrorMessage {
+                error_type: "unknown_error".to_owned(),
+                description: value.join(" "),
+                url: "".to_owned(),
+            };
+        };
+
+        // Pop for performance
+        JWTErrorMessage {
+            url: value.pop().unwrap(),
+            description: value.pop().unwrap(),
+            error_type: value.pop().unwrap(),
+        }
+    }
+}
 
 fn extract_all_quoted_strings(input: &str) -> Vec<String> {
     let re = Regex::new(r#""(.*?)""#).unwrap();
@@ -72,11 +100,7 @@ pub fn handle_response(response: Response) -> Result<Response, JWTError> {
             .to_str()
             .unwrap_or("Failed to convert HeaderValue to string");
         let strings = extract_all_quoted_strings(error_header);
-        return Err(JWTError(
-            strings[0].clone(),
-            strings[1].clone(),
-            strings[2].clone(),
-        ));
+        return Err(JWTError(strings.into()));
     }
     Ok(response)
 }

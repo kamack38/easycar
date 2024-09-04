@@ -11,6 +11,31 @@ use tokio::{
     time::{sleep, Duration as TokioDuration},
 };
 
+struct MakeClient {
+    client: reqwest::Client,
+    webhook_url: String,
+}
+
+impl MakeClient {
+    pub fn new(webhook_url: String) -> Self {
+        Self {
+            client: reqwest::Client::new(),
+            webhook_url,
+        }
+    }
+
+    pub async fn send(
+        &self,
+        title: &str,
+        message: &str,
+    ) -> Result<reqwest::Response, reqwest::Error> {
+        let mut map = HashMap::new();
+        map.insert("title", title);
+        map.insert("message", message);
+        self.client.post(&self.webhook_url).json(&map).send().await
+    }
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv().expect(".env file not found");
@@ -24,7 +49,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let osk_id = "3";
 
     let mut client = Client::new();
-    let make_client = reqwest::Client::new();
+    let make_client = MakeClient::new(webhook_url);
 
     // Create a channel for sending the token expire date
     let (tx, mut rx) = mpsc::channel::<DateTime<Utc>>(10);
@@ -60,7 +85,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     loop {
         if ry.try_recv().is_ok() {
             println!("Got refresh token signal. Refreshing...");
-            client.refresh_token().await.unwrap();
+            if let Err(err) = client.refresh_token().await {
+                println!("Got: {err}. Logining again...");
+                if let Err(login_err) = client.login(&username, &password).await {
+                    println!("While logining got an error: {login_err}");
+                };
+            };
             tx.send(client.token_expire_date.expect("Expire date is not set"))
                 .await
                 .unwrap();
@@ -86,21 +116,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         let exam_message = format!("Date: {}", exam[0].date);
                         map.insert("message", &exam_message);
 
-                        let res = make_client
-                            .post(&webhook_url)
-                            .json(&map)
-                            .send()
-                            .await?
-                            .text()
-                            .await?;
-
-                        println!("{res}");
+                        make_client
+                            .send("New exam available", &exam_message)
+                            .await
+                            .unwrap();
                     } else {
                         println!("No change...")
                     }
                 }
             }
-            Err(err) => println!("{}", err),
+            Err(err) => {
+                println!("{}", err);
+                make_client.send("Error", &err.to_string()).await.unwrap();
+            }
         };
 
         sleep(TokioDuration::from_secs(10)).await;
