@@ -1,3 +1,5 @@
+mod make;
+
 use std::collections::HashMap;
 
 use chrono::{DateTime, Days, Duration as ChronoDuration, Utc};
@@ -6,35 +8,11 @@ use info_car_api::{
     client::{reservation::LicenseCategory, Client},
     utils::find_first_non_empty_practice_exam,
 };
+use make::MakeClient;
 use tokio::{
     sync::mpsc,
     time::{sleep, Duration as TokioDuration},
 };
-
-struct MakeClient {
-    client: reqwest::Client,
-    webhook_url: String,
-}
-
-impl MakeClient {
-    pub fn new(webhook_url: String) -> Self {
-        Self {
-            client: reqwest::Client::new(),
-            webhook_url,
-        }
-    }
-
-    pub async fn send(
-        &self,
-        title: &str,
-        message: &str,
-    ) -> Result<reqwest::Response, reqwest::Error> {
-        let mut map = HashMap::new();
-        map.insert("title", title);
-        map.insert("message", message);
-        self.client.post(&self.webhook_url).json(&map).send().await
-    }
-}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
