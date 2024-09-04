@@ -25,4 +25,5 @@ Then place all required vars in a `.env` file
 - [x] Separate library crate
 - [x] Phone notifications via a webhook
 - [x] Exam signing
-- [ ] Automatic token refreshing
+- [x] Automatic token refreshing
+- [ ] Retry token refreshing
