@@ -47,8 +47,6 @@ pub enum RefreshTokenError {
 pub enum CsrfTokenError {
     #[error(transparent)]
     ReqwestError(#[from] reqwest::Error),
-    #[error(transparent)]
-    SelectorParseError(#[from] scraper::error::SelectorErrorKind<'static>),
     #[error("The element containing the CSRF token could not be found")]
     TokenNotFound,
     #[error("The CSRF token value could not be found on the input element")]

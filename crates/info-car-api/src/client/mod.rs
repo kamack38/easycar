@@ -105,7 +105,8 @@ impl Client {
         let response = self.client.get(url).send().await?;
 
         let fragment = Html::parse_fragment(&response.text().await?);
-        let csrf_selector = Selector::parse("input[type=\"hidden\"][name=\"_csrf\"]")?;
+        let csrf_selector =
+            Selector::parse("input[type=\"hidden\"][name=\"_csrf\"]").expect("Wrong selector");
 
         let csrf_element = fragment
             .select(&csrf_selector)
