@@ -27,3 +27,7 @@ Then place all required vars in a `.env` file
 - [x] Exam signing
 - [x] Automatic token refreshing
 - [ ] Retry token refreshing
+- [ ] Refactor telegram bot to use dispatching
+- [ ] Better error handeling
+- [ ] Easy deploy to shuttle.rs
+- [ ] Custom keyboard for signing for an exam with a single click

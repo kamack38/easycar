@@ -1,16 +1,25 @@
 mod utils;
 
+use std::sync::Arc;
+
 use chrono::{DateTime, Days, Duration as ChronoDuration, Utc};
 use dotenvy::dotenv;
 use info_car_api::{
-    client::{reservation::LicenseCategory, Client},
+    client::{
+        exam_schedule::{Exam, ExamSchedule, Schedule},
+        reservation::LicenseCategory,
+        Client,
+    },
     error::LoginError,
     utils::find_first_non_empty_practice_exam,
 };
 use teloxide::types::{KeyboardButton, KeyboardMarkup, KeyboardRemove};
 use teloxide::{prelude::*, utils::command::BotCommands};
 use tokio::{
-    sync::mpsc::{self, Receiver, Sender},
+    sync::{
+        mpsc::{self, Receiver, Sender},
+        Mutex,
+    },
     time::{sleep, Duration as TokioDuration},
 };
 use utils::{date_from_string, readable_time_delta};
@@ -31,6 +40,19 @@ impl UserData {
             chat_id,
         }
     }
+}
+
+#[derive(Debug)]
+enum ClientMessage {
+    GetSchedule,
+    GetNewExams,
+    RefreshToken,
+}
+
+#[derive(Debug)]
+enum BotMessage {
+    SendSchedule(ExamSchedule),
+    // SendCurrentExam(Exam),
 }
 
 #[tokio::main]
@@ -59,63 +81,83 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (tr, rc) = mpsc::channel::<DateTime<Utc>>(8);
 
     // Create a token bot channel (Transmit to Bot and Recieve from Client)
-    // let (tb, mut rc) = mpsc::channel::<bool>(10);
+    let (tb, rbc) = mpsc::channel::<BotMessage>(10);
 
-    tokio::spawn(info_car_worker(user_data, ra, tr));
+    tokio::spawn(info_car_worker(user_data, ra, tr, tb));
     tokio::spawn(scheduler(tc.clone()));
-    tokio::spawn(refresh_token_worker(tc, rc));
+    tokio::spawn(refresh_token_worker(tc.clone(), rc));
 
-    sleep(TokioDuration::from_secs(30)).await;
+    let rx_from_thread = Arc::new(Mutex::new(rbc));
 
-    teloxide::repl(bot, move |message: Message, bot: Bot| async move {
-        if let Some(text) = message.text() {
-            match text {
-                "/start" => {
-                    let rem_keyboard = KeyboardRemove::default();
-                    bot.send_message(message.chat.id, text)
-                        .reply_markup(rem_keyboard)
-                        .await?;
-                    // Create a custom keyboard
-                    let keyboard = KeyboardMarkup::default()
-                        .append_row(vec![
-                            KeyboardButton::new("Current Exam"),
-                            KeyboardButton::new("Exams"),
-                        ])
-                        .append_row(vec![KeyboardButton::new("Enroll")]);
+    teloxide::repl(bot, move |message: Message, bot: Bot| {
+        let tc = tc.clone();
+        let rbc: Arc<Mutex<Receiver<BotMessage>>> = Arc::clone(&rx_from_thread);
+        async move {
+            if let Some(text) = message.text() {
+                match text {
+                    "/start" => {
+                        let rem_keyboard = KeyboardRemove::default();
+                        bot.send_message(message.chat.id, text)
+                            .reply_markup(rem_keyboard)
+                            .await?;
+                        // Create a custom keyboard
+                        let keyboard = KeyboardMarkup::default()
+                            .append_row(vec![
+                                KeyboardButton::new("Current Exam"),
+                                KeyboardButton::new("Exams"),
+                            ])
+                            .append_row(vec![KeyboardButton::new("Enroll")]);
 
-                    // Send the message with the keyboard
-                    bot.send_message(message.chat.id, "Choose an option:")
-                        .reply_markup(keyboard)
+                        // Send the message with the keyboard
+                        bot.send_message(message.chat.id, "Choose an option:")
+                            .reply_markup(keyboard)
+                            .await?;
+                    }
+                    "Current Exam" => {
+                        // tc.send(ClientMessage::GetAvailableExams).await.unwrap();
+                        bot.send_message(message.chat.id, "The current exam is: ")
+                            .await?;
+                    }
+                    "Exams" => {
+                        tc.send(ClientMessage::GetSchedule).await.unwrap();
+                        let BotMessage::SendSchedule(schedule) = rbc
+                            .lock()
+                            .await
+                            .recv()
+                            .await
+                            .expect("Client->Bot channel closed");
+
+                        println!("{schedule:?}");
+                        bot.send_message(
+                            message.chat.id,
+                            format!(
+                                "The available exams are: {:?}",
+                                schedule.schedule.scheduled_days[0]
+                            ),
+                        )
                         .await?;
-                }
-                "Current Exam" => {
-                    bot.send_message(message.chat.id, "The current exam is")
+                    }
+                    "Enroll" => {
+                        bot.send_message(message.chat.id, "Do you want to enroll to exam")
+                            .await?;
+                    }
+                    "/uptime" => {
+                        bot.send_message(
+                            message.chat.id,
+                            format!(
+                                "The uptime is: {}",
+                                readable_time_delta(Utc::now() - start_date)
+                            ),
+                        )
                         .await?;
-                }
-                "Exams" => {
-                    bot.send_message(message.chat.id, "The available exams are: ")
-                        .await?;
-                }
-                "Enroll" => {
-                    bot.send_message(message.chat.id, "Do you want to enroll to exam")
-                        .await?;
-                }
-                "/uptime" => {
-                    bot.send_message(
-                        message.chat.id,
-                        format!(
-                            "The uptime is: {}",
-                            readable_time_delta(Utc::now() - start_date)
-                        ),
-                    )
-                    .await?;
-                }
-                _ => {
-                    bot.send_message(message.chat.id, "Unknown command").await?;
+                    }
+                    _ => {
+                        bot.send_message(message.chat.id, "Unknown command").await?;
+                    }
                 }
             }
+            Ok(())
         }
-        Ok(())
     })
     .await;
 
@@ -149,7 +191,7 @@ async fn refresh_token_worker(
     mut rc: mpsc::Receiver<DateTime<Utc>>,
 ) {
     loop {
-        let expire_date = rc.recv().await.unwrap();
+        let expire_date = rc.recv().await.expect("Client transmiter not active");
         println!("Got token expire date: {expire_date}");
         let duration = expire_date - Utc::now() - ChronoDuration::minutes(5);
         println!("Token expires in: {}", duration.num_seconds());
@@ -171,16 +213,11 @@ async fn scheduler(tc: Sender<ClientMessage>) {
     }
 }
 
-enum ClientMessage {
-    GetAvailableExams,
-    GetNewExams,
-    RefreshToken,
-}
-
 async fn info_car_worker(
     user_data: UserData,
     mut r_client: Receiver<ClientMessage>,
     t_to_refresher: Sender<DateTime<Utc>>,
+    t_to_bot: Sender<BotMessage>,
 ) -> Result<(), LoginError> {
     let mut last_id: String = "".to_owned();
 
@@ -256,7 +293,29 @@ async fn info_car_worker(
                     }
                 };
             }
-            ClientMessage::GetAvailableExams => todo!(),
+            ClientMessage::GetSchedule => {
+                println!("Getting schedule");
+                let response = client
+                    .exam_schedule(
+                        user_data.preffered_osk.clone(),
+                        Utc::now(),
+                        Utc::now().checked_add_days(Days::new(31)).unwrap(),
+                        LicenseCategory::B,
+                    )
+                    .await;
+
+                match response {
+                    Ok(schedule) => {
+                        t_to_bot
+                            .send(BotMessage::SendSchedule(schedule))
+                            .await
+                            .expect("Bot reciever does not exist");
+                    }
+                    Err(err) => {
+                        logger.log(&format!("Got an error! Error: {err}")).await;
+                    }
+                };
+            }
         }
     }
 }
