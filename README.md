@@ -60,8 +60,8 @@ cargo-shuttle project restart --idle-minutes 0
 - [x] Phone notifications via a webhook
 - [x] Exam signing
 - [x] Automatic token refreshing
+- [x] Easy deploy to shuttle.rs
 - [ ] Retry token refreshing
 - [ ] Refactor telegram bot to use dispatching
 - [ ] Better error handling
-- [ ] Easy deploy to shuttle.rs
 - [ ] Custom keyboard for signing for an exam with a single click
