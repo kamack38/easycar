@@ -6,7 +6,7 @@ This is a repo for easy car - an app which finds the newest exams on [info-car.p
 
 ## Prerequisites
 
-Do be able to run this project and use the telegram bot you have to fill in the `Secrets.toml.example` file and then rename it to `Secrets.toml`.
+To run this project and use the telegram bot you have to fill in the `Secrets.toml.example` file and then rename it to `Secrets.toml`.
 
 You can create your own bot using the [BotFather](https://t.me/botfather).
 
@@ -21,8 +21,6 @@ cargo run
 ```bash
 cargo build --release
 ```
-
-Then place all required vars in a `.env` file 
 
 ## Deployment
 
