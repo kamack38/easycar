@@ -8,6 +8,7 @@ use chrono::{DateTime, Duration, Utc};
 use reqwest::ClientBuilder;
 use scraper::{Html, Selector};
 use serde::Deserialize;
+use word_centers::WordRescheduleEnabled;
 
 use self::{
     exam_schedule::ExamSchedule,
@@ -173,6 +174,25 @@ impl Client {
         Ok(handle_response(response)?.json().await?)
     }
 
+    pub async fn is_word_reschedule_enabled(
+        &self,
+        word_id: i32,
+    ) -> Result<bool, GenericClientError> {
+        let response = self
+            .client
+            .get(format!(
+                "https://info-car.pl/api/word/word-centers/reschedule-enabled/{word_id}"
+            ))
+            .bearer_auth(self.token.as_ref().ok_or(GenericClientError::NoBearer)?)
+            .send()
+            .await?;
+
+        Ok(handle_response(response)?
+            .json::<WordRescheduleEnabled>()
+            .await?
+            .reschedule_enabled)
+    }
+
     pub async fn exam_schedule(
         &self,
         word_id: String,
@@ -228,8 +248,6 @@ impl Client {
             .bearer_auth(self.token.as_ref().ok_or(GenericClientError::NoBearer)?)
             .send()
             .await?;
-
-        // println!("{}", response.text().await?);
 
         Ok(handle_response(response)?.json().await?)
     }

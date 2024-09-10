@@ -60,18 +60,21 @@ impl Default for LicenseCategory {
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Status {
-    pub status: PossibleStatuses, // TODO: Convert to a type
-    pub timestamp: String,        // TODO: Convert to date type
+    pub status: PossibleStatuses,
+    pub timestamp: String, // TODO: Convert to date type
     pub message: Option<String>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
-#[serde(rename_all = "UPPERCASE")]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum PossibleStatuses {
     Created,
-    PlaceReserveD,
-    Cancelled,
+    Draft,
+    PaymentRejected,
+    PlaceReserved,
     SignupConfirmed,
+    CancellationRequest,
+    Cancelled,
     #[serde(other)]
     Unknown,
 }

@@ -12,6 +12,12 @@ pub struct Province {
     #[serde(deserialize_with = "deserialize_number_from_string")]
     pub zoom: i32,
 }
+#[derive(Deserialize, Debug, Clone)]
+pub struct WordRescheduleEnabled {
+    #[serde(deserialize_with = "deserialize_number_from_string")]
+    pub id: i32,
+    pub reschedule_enabled: bool,
+}
 
 #[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
