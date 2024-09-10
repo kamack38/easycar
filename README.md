@@ -46,6 +46,12 @@ To deploy run:
 cargo shuttle deploy
 ```
 
+By default shuttle puts this project to sleep after 30 minutes to disable this run:
+
+```bash
+cargo-shuttle project restart --idle-minutes 0
+```
+
 ## TODO
 
 - [x] Username and password login
