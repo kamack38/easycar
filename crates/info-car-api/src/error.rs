@@ -26,6 +26,14 @@ pub enum LoginError {
 }
 
 #[derive(Error, Debug)]
+pub enum LogoutError {
+    #[error(transparent)]
+    ReqwestError(#[from] reqwest::Error),
+    #[error("The auth token is not set")]
+    NoToken,
+}
+
+#[derive(Error, Debug)]
 pub enum RefreshTokenError {
     #[error(transparent)]
     ReqwestError(#[from] reqwest::Error),

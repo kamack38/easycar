@@ -21,7 +21,7 @@ use self::{
     word_centers::WordCenters,
 };
 use crate::error::{
-    handle_response, CsrfTokenError, GenericClientError, LoginError, RefreshTokenError,
+    handle_response, CsrfTokenError, GenericClientError, LoginError, LogoutError, RefreshTokenError,
 };
 
 #[derive(Deserialize, Debug, Clone)]
@@ -140,6 +140,18 @@ impl Client {
 
         self.refresh_token().await?;
 
+        Ok(())
+    }
+
+    pub async fn logout(&mut self) -> Result<(), LogoutError> {
+        self.client
+            .get(format!(
+                "https://info-car.pl/oauth2/endsession?id_token_hint={}",
+                self.token.as_ref().ok_or(LogoutError::NoToken)?
+            ))
+            .send()
+            .await?;
+        self.token = None;
         Ok(())
     }
 
