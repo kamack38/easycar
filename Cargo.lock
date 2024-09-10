@@ -608,6 +608,7 @@ dependencies = [
  "reqwest 0.12.7",
  "shuttle-runtime",
  "teloxide",
+ "thiserror",
  "tokio",
 ]
 

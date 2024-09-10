@@ -61,7 +61,7 @@ cargo-shuttle project restart --idle-minutes 0
 - [x] Exam signing
 - [x] Automatic token refreshing
 - [x] Easy deploy to shuttle.rs
-- [ ] Convert info_car_worker into a service
+- [x] Convert info_car_worker into a service
 - [ ] Retry token refreshing
 - [ ] Refactor telegram bot to use dispatching
 - [ ] Better error handling

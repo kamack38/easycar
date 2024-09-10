@@ -4,10 +4,11 @@ use crate::utils::date_from_string;
 use chrono::{DateTime, Days, Duration as ChronoDuration, Utc};
 use info_car_api::{
     client::{exam_schedule::ExamList, reservation::LicenseCategory, Client},
-    error::LoginError,
+    error::{GenericClientError, LoginError},
     utils::find_n_practice_exams,
 };
 use teloxide::prelude::*;
+use thiserror::Error;
 use tokio::{
     sync::mpsc::{self, Receiver, Sender},
     time::{sleep, Duration as TokioDuration},
@@ -41,7 +42,7 @@ pub enum ClientMessage {
 
 #[derive(Debug)]
 pub enum BotMessage {
-    SendSchedule(ExamList),
+    SendSchedule(Option<ExamList>),
     // SendCurrentExam(Exam),
 }
 
@@ -72,113 +73,140 @@ pub async fn scheduler(tc: Sender<ClientMessage>) {
     }
 }
 
-pub async fn info_car_worker(
-    user_data: UserData,
-    teloxide_token: String,
-    mut r_client: Receiver<ClientMessage>,
+pub struct InfoCarService {
+    logger: BotLogger,
+    client: Client,
+    last_exam_id: String,
     t_to_refresher: Sender<DateTime<Utc>>,
     t_to_bot: Sender<BotMessage>,
-) -> Result<(), LoginError> {
-    let mut last_id: String = "".to_owned();
+    r_client: Receiver<ClientMessage>,
+    user_data: UserData,
+}
 
-    let logger = BotLogger::new(teloxide_token, user_data.chat_id);
+#[derive(Error, Debug)]
+pub enum ServiceError {
+    #[error(transparent)]
+    ClientLoginError(#[from] LoginError),
+    #[error(transparent)]
+    GenericClientError(#[from] GenericClientError),
+    #[error("No exams found")]
+    NoExamsError,
+}
 
-    let mut client = Client::new();
-    client
-        .login(&user_data.username, &user_data.password)
-        .await?;
-    t_to_refresher
-        .send(
-            client
-                .token_expire_date
-                .expect("Expire date is not available"),
-        )
-        .await
-        .unwrap();
+impl InfoCarService {
+    pub fn new(
+        user_data: UserData,
+        teloxide_token: String,
+        r_client: Receiver<ClientMessage>,
+        t_to_refresher: Sender<DateTime<Utc>>,
+        t_to_bot: Sender<BotMessage>,
+    ) -> Self {
+        Self {
+            logger: BotLogger::new(teloxide_token, user_data.chat_id),
+            client: Client::new(),
+            last_exam_id: String::from(""),
+            r_client,
+            t_to_refresher,
+            t_to_bot,
+            user_data,
+        }
+    }
 
-    loop {
-        match r_client.recv().await.expect("No sender exists...") {
-            // TODO: Refactor
+    pub async fn start(&mut self) -> Result<(), LoginError> {
+        self.client
+            .login(&self.user_data.username, &self.user_data.password)
+            .await?;
+        self.t_to_refresher
+            .send(
+                self.client
+                    .token_expire_date
+                    .expect("Expire date is not available"),
+            )
+            .await
+            .unwrap();
+
+        loop {
+            if let Err(err) = self.handle_message().await {
+                println!("Got an error: {err}");
+            };
+        }
+    }
+
+    async fn handle_message(&mut self) -> Result<(), ServiceError> {
+        match self.r_client.recv().await.expect("No sender exists...") {
             ClientMessage::RefreshToken => {
-                logger.log("Got refresh token signal. Refreshing...").await;
-                if let Err(err) = client.refresh_token().await {
-                    logger.log(&format!("Got: {err}. Logining again...")).await;
-                    if let Err(login_err) =
-                        client.login(&user_data.username, &user_data.password).await
-                    {
-                        let cos = login_err.to_string();
-                        logger
-                            .log(&format!("While logining got an error: {}", cos))
-                            .await;
-                    };
+                self.logger
+                    .log("Got refresh token signal. Refreshing...")
+                    .await;
+                if let Err(err) = self.client.refresh_token().await {
+                    self.logger
+                        .log(&format!("Got: {err}. Logining again..."))
+                        .await;
+                    self.client
+                        .login(&self.user_data.username, &self.user_data.password)
+                        .await?;
                 };
-                t_to_refresher
-                    .send(client.token_expire_date.expect("Expire date is not set"))
+                self.t_to_refresher
+                    .send(
+                        self.client
+                            .token_expire_date
+                            .expect("Expire date is not set"),
+                    )
                     .await
                     .unwrap();
             }
             ClientMessage::GetNewExams => {
-                let response = client
+                let schedule = self
+                    .client
                     .exam_schedule(
-                        user_data.preferred_osk.clone(),
+                        self.user_data.preferred_osk.clone(),
                         Utc::now(),
                         Utc::now().checked_add_days(Days::new(31)).unwrap(),
                         LicenseCategory::B,
                     )
-                    .await;
+                    .await?;
 
-                match response {
-                    Ok(schedule) => match find_n_practice_exams(schedule, 1) {
-                        Some(exams) => {
-                            if exams[0].id != last_id {
-                                last_id = exams[0].id.clone();
-                                println!("{:?}", exams[0]);
+                let closest_exam = find_n_practice_exams(schedule, 1)
+                    .ok_or(ServiceError::NoExamsError)?
+                    .pop()
+                    .unwrap();
 
-                                let duration = date_from_string(&exams[0].date)
-                                    .signed_duration_since(Utc::now())
-                                    .num_days();
-                                let exam_message = format!(
-                                    "New exam is available! The next exam date is {} (in {} days)",
-                                    exams[0].date, duration
-                                );
-                                logger.log(&format!("{exam_message}")).await;
-                            } else {
-                                println!("No change...")
-                            }
-                        }
-                        None => println!("No exams found"),
-                    },
-                    Err(err) => {
-                        logger.log(&format!("Got an error! Error: {err}")).await;
-                    }
-                };
+                if closest_exam.id == self.last_exam_id {
+                    println!("No change...");
+                    return Ok(());
+                }
+
+                self.last_exam_id = closest_exam.id.clone();
+
+                let duration = date_from_string(&closest_exam.date)
+                    .signed_duration_since(Utc::now())
+                    .num_days();
+                let exam_message = format!(
+                    "New exam is available! The next exam date is {} (in {} days)",
+                    closest_exam.date, duration
+                );
+                self.logger.log(&exam_message).await;
             }
             ClientMessage::GetSchedule => {
-                println!("Getting schedule");
-                let response = client
+                let exam_schedule = self
+                    .client
                     .exam_schedule(
-                        user_data.preferred_osk.clone(),
+                        self.user_data.preferred_osk.clone(),
                         Utc::now(),
                         Utc::now().checked_add_days(Days::new(31)).unwrap(),
                         LicenseCategory::B,
                     )
-                    .await;
+                    .await?;
 
-                match response {
-                    Ok(schedule) => {
-                        let flattened_schedule = find_n_practice_exams(schedule, 5);
-                        t_to_bot
-                            .send(BotMessage::SendSchedule(
-                                flattened_schedule.expect("No exams found").into(),
-                            ))
-                            .await
-                            .expect("Bot receiver does not exist");
-                    }
-                    Err(err) => {
-                        logger.log(&format!("Got an error! Error: {err}")).await;
-                    }
-                };
+                let flattened_schedule = find_n_practice_exams(exam_schedule, 5);
+                self.t_to_bot
+                    .send(BotMessage::SendSchedule(
+                        flattened_schedule.map(|v| v.into()),
+                    ))
+                    .await
+                    .expect("Bot receiver does not exist");
             }
-        }
+        };
+        Ok(())
     }
 }

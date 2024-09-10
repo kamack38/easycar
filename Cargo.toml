@@ -21,6 +21,7 @@ reqwest = "0.12.7"
 teloxide = { version = "0.13.0", features = ["macros"] }
 chrono-tz = "0.10.0"
 shuttle-runtime = "0.47.0"
+thiserror = "1.0.63"
 
 [profile.release]
 strip = true  # Automatically strip symbols from the binary.

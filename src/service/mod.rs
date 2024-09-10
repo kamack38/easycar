@@ -39,13 +39,15 @@ impl EasyCarService {
         // Create a token bot channel (Transmit to Bot and Receive from Client)
         let (tb, rbc) = mpsc::channel::<BotMessage>(10);
 
-        tokio::spawn(info_car_worker(
+        let mut info_car_service = InfoCarService::new(
             self.user_data.clone(),
             self.teloxide_token.clone(),
             ra,
-            tr,
-            tb,
-        ));
+            tr.clone(),
+            tb.clone(),
+        );
+
+        tokio::spawn(async move { info_car_service.start().await });
         tokio::spawn(scheduler(tc.clone()));
         tokio::spawn(refresh_token_worker(tc.clone(), rc));
 
@@ -89,12 +91,18 @@ impl EasyCarService {
                                 .await
                                 .expect("Client->Bot channel closed");
 
-                            println!("{schedule}");
-                            bot.send_message(
-                                message.chat.id,
-                                format!("The available exams are:\n{}", schedule),
-                            )
-                            .await?;
+                            match schedule {
+                                Some(schedule) => {
+                                    bot.send_message(
+                                        message.chat.id,
+                                        format!("The available exams are:\n{}", schedule),
+                                    )
+                                    .await?;
+                                }
+                                None => {
+                                    bot.send_message(message.chat.id, "No exams found").await?;
+                                }
+                            }
                         }
                         "Enroll" => {
                             bot.send_message(message.chat.id, "Do you want to enroll to exam")
