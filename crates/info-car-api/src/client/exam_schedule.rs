@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use serde::Deserialize;
 use serde_aux::field_attributes::deserialize_number_from_string;
 
@@ -13,6 +15,24 @@ pub struct Exam {
     #[serde(deserialize_with = "deserialize_number_from_string")]
     pub amount: i32, // Price
     pub additional_info: String,
+}
+
+#[derive(Debug)]
+pub struct ExamList(pub Vec<Exam>);
+
+impl From<Vec<Exam>> for ExamList {
+    fn from(value: Vec<Exam>) -> Self {
+        Self(value)
+    }
+}
+
+impl Display for ExamList {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for exam in self.0.iter() {
+            writeln!(f, "Exam ({}): {}", exam.id, exam.date)?;
+        }
+        Ok(())
+    }
 }
 
 #[derive(Deserialize, Debug, Clone)]

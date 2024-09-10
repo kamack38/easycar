@@ -1,4 +1,4 @@
-use easycar::service::{EasyCarService, UserData};
+use easycar::service::{workers::UserData, EasyCarService};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

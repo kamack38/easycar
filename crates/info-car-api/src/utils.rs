@@ -1,14 +1,16 @@
 use crate::client::exam_schedule::{Exam, ExamSchedule};
+use std::ops::Not;
 
-pub fn find_first_non_empty_practice_exam(schedule: &ExamSchedule) -> Option<&Vec<Exam>> {
-    for day in &schedule.schedule.scheduled_days {
-        for hour in &day.scheduled_hours {
-            if !hour.practice_exams.is_empty() {
-                return Some(&hour.practice_exams);
-            }
-        }
-    }
-    None
+pub fn find_n_practice_exams(schedule: ExamSchedule, number: usize) -> Option<Vec<Exam>> {
+    let exams: Vec<Exam> = schedule
+        .schedule
+        .scheduled_days
+        .into_iter()
+        .flat_map(|day| day.scheduled_hours.into_iter())
+        .flat_map(|hour| hour.practice_exams.into_iter())
+        .take(number)
+        .collect();
+    exams.is_empty().not().then(|| exams)
 }
 
 pub fn find_all_practice_exams(schedule: &ExamSchedule) -> Vec<&Exam> {
