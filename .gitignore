@@ -2,3 +2,4 @@
 .env
 *.jsonc
 *.txt
+Secrets.toml
