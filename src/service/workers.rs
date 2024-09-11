@@ -3,7 +3,11 @@ use crate::logger::BotLogger;
 use crate::utils::date_from_string;
 use chrono::{DateTime, Days, Duration as ChronoDuration, Utc};
 use info_car_api::{
-    client::{exam_schedule::ExamList, reservation::LicenseCategory, Client},
+    client::{
+        exam_schedule::ExamList,
+        reservation::{list::ReservationList, LicenseCategory},
+        Client,
+    },
     error::{GenericClientError, LoginError},
     utils::find_n_practice_exams,
 };
@@ -38,11 +42,13 @@ pub enum ClientMessage {
     GetSchedule,
     GetNewExams,
     RefreshToken,
+    GetReservations,
 }
 
 #[derive(Debug)]
 pub enum BotMessage {
     SendSchedule(Option<ExamList>),
+    SendReservations(Option<ReservationList>),
     // SendCurrentExam(Exam),
 }
 
@@ -203,6 +209,16 @@ impl InfoCarService {
                     .send(BotMessage::SendSchedule(
                         flattened_schedule.map(|v| v.into()),
                     ))
+                    .await
+                    .expect("Bot receiver does not exist");
+            }
+            ClientMessage::GetReservations => {
+                let reservations = self.client.my_reservations().await?;
+
+                println!("{reservations:?}");
+
+                self.t_to_bot
+                    .send(BotMessage::SendReservations(Some(reservations)))
                     .await
                     .expect("Bot receiver does not exist");
             }

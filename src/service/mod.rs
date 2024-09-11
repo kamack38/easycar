@@ -32,6 +32,9 @@ enum Command {
     /// Get current exam
     #[command()]
     Exam,
+    /// Show all reservations
+    #[command()]
+    Reservations,
     /// Enroll to the exam
     #[command()]
     Enroll(String),
@@ -130,24 +133,73 @@ impl EasyCarService {
                     Command::Exams => {
                         tc.send(ClientMessage::GetSchedule).await.unwrap();
                         let message_id = waiting_spinner(&rbc, &bot, msg.chat.id).await?;
-                        let BotMessage::SendSchedule(schedule) = rbc
+                        if let BotMessage::SendSchedule(schedule) = rbc
                             .lock()
                             .await
                             .recv()
                             .await
-                            .expect("Client->Bot channel closed");
-
-                        match schedule {
-                            Some(schedule) => {
-                                bot.edit_message_text(
-                                    msg.chat.id,
-                                    message_id,
-                                    format!("The available exams are:\n{}", schedule),
-                                )
-                                .await?;
+                            .expect("Client->Bot channel closed")
+                        {
+                            match schedule {
+                                Some(schedule) => {
+                                    bot.edit_message_text(
+                                        msg.chat.id,
+                                        message_id,
+                                        format!("The available exams are:\n{}", schedule),
+                                    )
+                                    .await?;
+                                }
+                                None => {
+                                    bot.edit_message_text(
+                                        msg.chat.id,
+                                        message_id,
+                                        "❌ No exams found",
+                                    )
+                                    .await?;
+                                }
                             }
-                            None => {
-                                bot.send_message(msg.chat.id, "No exams found").await?;
+                        }
+                    }
+                    Command::Reservations => {
+                        tc.send(ClientMessage::GetReservations).await.unwrap();
+                        let message_id = waiting_spinner(&rbc, &bot, msg.chat.id).await?;
+                        if let BotMessage::SendReservations(reservations) = rbc
+                            .lock()
+                            .await
+                            .recv()
+                            .await
+                            .expect("Client->Bot channel closed")
+                        {
+                            match reservations {
+                                Some(reservations) => {
+                                    let text: String = reservations
+                                        .items
+                                        .iter()
+                                        .map(|v| {
+                                            format!(
+                                                "• At {} in {} ({})",
+                                                v.exam
+                                                    .practice
+                                                    .as_ref()
+                                                    .or_else(|| v.exam.theory.as_ref())
+                                                    .unwrap()
+                                                    .date,
+                                                v.exam.organization_unit_name,
+                                                v.status.status
+                                            )
+                                        })
+                                        .collect::<Vec<_>>()
+                                        .join("\n\n");
+                                    bot.edit_message_text(msg.chat.id, message_id, text).await?;
+                                }
+                                None => {
+                                    bot.edit_message_text(
+                                        msg.chat.id,
+                                        message_id,
+                                        "❌ No reservations found",
+                                    )
+                                    .await?;
+                                }
                             }
                         }
                     }

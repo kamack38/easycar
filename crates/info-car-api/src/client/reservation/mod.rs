@@ -78,3 +78,19 @@ pub enum PossibleStatuses {
     #[serde(other)]
     Unknown,
 }
+
+impl fmt::Display for PossibleStatuses {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let status_str = match self {
+            PossibleStatuses::Created => "Created",
+            PossibleStatuses::Draft => "Draft",
+            PossibleStatuses::PaymentRejected => "Payment Rejected",
+            PossibleStatuses::PlaceReserved => "Place Reserved",
+            PossibleStatuses::SignupConfirmed => "Signup Confirmed",
+            PossibleStatuses::CancellationRequest => "Cancellation Request",
+            PossibleStatuses::Cancelled => "Cancelled",
+            PossibleStatuses::Unknown => "Unknown",
+        };
+        write!(f, "{}", status_str)
+    }
+}
