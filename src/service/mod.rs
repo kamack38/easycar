@@ -1,21 +1,70 @@
 pub mod workers;
 
+use std::ops::Not;
 use std::sync::Arc;
 
 use crate::utils::readable_time_delta;
 use chrono::{DateTime, Utc};
-use teloxide::prelude::*;
-use teloxide::types::{KeyboardButton, KeyboardMarkup, KeyboardRemove};
+use teloxide::payloads::SetChatMenuButtonSetters;
+use teloxide::types::{MenuButton, MessageId};
+use teloxide::RequestError;
+use teloxide::{prelude::*, utils::command::BotCommands};
 use tokio::sync::{
     mpsc::{self, Receiver},
     Mutex,
 };
+use tokio::time::{sleep, Duration};
 use workers::*;
+
+/// These commands are supported:
+#[derive(BotCommands, Clone)]
+#[command(rename_rule = "lowercase")]
+enum Command {
+    /// Display this text.
+    #[command(aliases = ["h", "?"])]
+    Help,
+    /// Get the bot uptime
+    #[command()]
+    Uptime,
+    /// Get exam dates
+    #[command()]
+    Exams,
+    /// Get current exam
+    #[command()]
+    Exam,
+    /// Enroll to the exam
+    #[command()]
+    Enroll(String),
+}
 
 pub struct EasyCarService {
     pub bot: Bot,
     pub teloxide_token: String,
     pub user_data: UserData,
+}
+
+async fn waiting_spinner(
+    rbc: &Arc<Mutex<Receiver<BotMessage>>>,
+    bot: &Bot,
+    chat_id: ChatId,
+) -> Result<MessageId, RequestError> {
+    // Spinner logic
+    let spinner = vec!["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+    let mut iter = spinner.iter().cycle();
+
+    // Send an initial message and get its MessageId to edit later
+    let sent_message = bot.send_message(chat_id, *iter.next().unwrap()).await?;
+
+    // Simulate the spinner by continuously editing the message
+    for frame in iter {
+        bot.edit_message_text(chat_id, sent_message.id, *frame)
+            .await?;
+        sleep(Duration::from_millis(100)).await; // Adjust the speed here
+        if rbc.lock().await.is_empty().not() {
+            break;
+        }
+    }
+    Ok(sent_message.id)
 }
 
 impl EasyCarService {
@@ -26,7 +75,8 @@ impl EasyCarService {
             teloxide_token,
         }
     }
-    pub async fn start(&self) -> Result<(), ()> {
+
+    pub async fn start(self) -> Result<(), ()> {
         // Get a start date for the /uptime command
         let start_date = Utc::now();
 
@@ -53,76 +103,72 @@ impl EasyCarService {
 
         let rx_from_thread = Arc::new(Mutex::new(rbc));
 
-        teloxide::repl(self.bot.clone(), move |message: Message, bot: Bot| {
+        self.bot
+            .set_my_commands(Command::bot_commands())
+            .await
+            .unwrap();
+        self.bot
+            .set_chat_menu_button()
+            .menu_button(MenuButton::Commands)
+            .await
+            .unwrap();
+
+        Command::repl(self.bot, move |bot: Bot, msg: Message, cmd: Command| {
             let tc = tc.clone();
             let rbc: Arc<Mutex<Receiver<BotMessage>>> = Arc::clone(&rx_from_thread);
             async move {
-                if let Some(text) = message.text() {
-                    match text {
-                        "/start" => {
-                            let rem_keyboard = KeyboardRemove::default();
-                            bot.send_message(message.chat.id, text)
-                                .reply_markup(rem_keyboard)
-                                .await?;
-                            // Create a custom keyboard
-                            let keyboard = KeyboardMarkup::default()
-                                .append_row(vec![
-                                    KeyboardButton::new("Current Exam"),
-                                    KeyboardButton::new("Exams"),
-                                ])
-                                .append_row(vec![KeyboardButton::new("Enroll")]);
+                match cmd {
+                    Command::Help => {
+                        bot.send_message(msg.chat.id, Command::descriptions().to_string())
+                            .await?;
+                    }
+                    Command::Exam => {
+                        // tc.send(ClientMessage::GetAvailableExams).await.unwrap();
+                        bot.send_message(msg.chat.id, "The current exam is: ")
+                            .await?;
+                    }
+                    Command::Exams => {
+                        tc.send(ClientMessage::GetSchedule).await.unwrap();
+                        let message_id = waiting_spinner(&rbc, &bot, msg.chat.id).await?;
+                        let BotMessage::SendSchedule(schedule) = rbc
+                            .lock()
+                            .await
+                            .recv()
+                            .await
+                            .expect("Client->Bot channel closed");
 
-                            // Send the message with the keyboard
-                            bot.send_message(message.chat.id, "Choose an option:")
-                                .reply_markup(keyboard)
+                        match schedule {
+                            Some(schedule) => {
+                                bot.edit_message_text(
+                                    msg.chat.id,
+                                    message_id,
+                                    format!("The available exams are:\n{}", schedule),
+                                )
                                 .await?;
-                        }
-                        "Current Exam" => {
-                            // tc.send(ClientMessage::GetAvailableExams).await.unwrap();
-                            bot.send_message(message.chat.id, "The current exam is: ")
-                                .await?;
-                        }
-                        "Exams" => {
-                            tc.send(ClientMessage::GetSchedule).await.unwrap();
-                            let BotMessage::SendSchedule(schedule) = rbc
-                                .lock()
-                                .await
-                                .recv()
-                                .await
-                                .expect("Client->Bot channel closed");
-
-                            match schedule {
-                                Some(schedule) => {
-                                    bot.send_message(
-                                        message.chat.id,
-                                        format!("The available exams are:\n{}", schedule),
-                                    )
-                                    .await?;
-                                }
-                                None => {
-                                    bot.send_message(message.chat.id, "No exams found").await?;
-                                }
+                            }
+                            None => {
+                                bot.send_message(msg.chat.id, "No exams found").await?;
                             }
                         }
-                        "Enroll" => {
-                            bot.send_message(message.chat.id, "Do you want to enroll to exam")
-                                .await?;
-                        }
-                        "/uptime" => {
-                            bot.send_message(
-                                message.chat.id,
-                                format!(
-                                    "The uptime is: {}",
-                                    readable_time_delta(Utc::now() - start_date)
-                                ),
-                            )
-                            .await?;
-                        }
-                        _ => {
-                            bot.send_message(message.chat.id, "Unknown command").await?;
-                        }
                     }
-                }
+                    Command::Enroll(exam_id) => {
+                        bot.send_message(
+                            msg.chat.id,
+                            format!("Do you want to enroll to exam {exam_id}"),
+                        )
+                        .await?;
+                    }
+                    Command::Uptime => {
+                        bot.send_message(
+                            msg.chat.id,
+                            format!(
+                                "The uptime is: {}",
+                                readable_time_delta(Utc::now() - start_date)
+                            ),
+                        )
+                        .await?;
+                    }
+                };
                 Ok(())
             }
         })
