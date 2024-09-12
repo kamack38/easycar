@@ -5,7 +5,6 @@ use std::sync::Arc;
 use crate::client::{GetExamsError, InfoCarClient, UserData};
 use crate::utils::readable_time_delta;
 use chrono::{DateTime, Utc};
-use info_car_api::client::exam_schedule::ExamList;
 use info_car_api::error::GenericClientError;
 use teloxide::payloads::SetChatMenuButtonSetters;
 use teloxide::types::{MenuButton, MessageId};
@@ -85,7 +84,10 @@ async fn handle_spinner_cmd(
             let exams = client.lock().await.get_nearest_exams(5).await?;
             Ok(format!(
                 "The available exams are:\n{}",
-                ExamList::from(exams)
+                exams
+                    .iter()
+                    .map(|exam| format!("Exam ({}): {}\n", exam.id, exam.date))
+                    .collect::<String>()
             ))
         }
         Command::Reservations => {
@@ -96,7 +98,7 @@ async fn handle_spinner_cmd(
                 .iter()
                 .map(|v| {
                     format!(
-                        "• At {} in {} ({})",
+                        "• At {} in {} ({})\n\n",
                         v.exam
                             .practice
                             .as_ref()
@@ -107,8 +109,7 @@ async fn handle_spinner_cmd(
                         v.status.status
                     )
                 })
-                .collect::<Vec<_>>()
-                .join("\n\n");
+                .collect::<String>();
             Ok(text)
         }
         _ => unreachable!(),
