@@ -1,4 +1,4 @@
-use easycar::service::{workers::UserData, EasyCarService};
+use easycar::{service::EasyCarService, UserData};
 
 struct ShuttleService(EasyCarService);
 
@@ -28,6 +28,7 @@ async fn init(
 
     Ok(ShuttleService(EasyCarService::new(
         teloxide_key,
-        UserData::new(username, password, "3".to_owned(), chat_id),
+        UserData::new(username, password, "3".to_owned()),
+        chat_id,
     )))
 }

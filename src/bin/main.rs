@@ -14,9 +14,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let chat_id = dotenvy::var("TELEGRAM_CHAT_ID")?;
     let teloxide_token = dotenvy::var("TELOXIDE_TOKEN")?;
-    let user_data = UserData::new(username, password, osk_id.to_string(), chat_id);
+    let user_data = UserData::new(username, password, osk_id.to_string());
 
-    let service = EasyCarService::new(teloxide_token, user_data);
+    let service = EasyCarService::new(teloxide_token, user_data, chat_id);
     service.start().await.expect("Service error");
 
     Ok(())
