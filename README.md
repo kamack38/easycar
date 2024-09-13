@@ -14,8 +14,7 @@ This is a repo for easy car - an app which finds the newest exams on [info-car.p
 - [x] Mobile notifications via a telegram
 - [x] Customisable telegram bot 
 - [x] Checking exam status
-- [ ] /enroll autocomplete
-- [ ] Custom keyboards
+- [ ] Paying for exam using BLIK code
 
 ## Prerequisites
 
