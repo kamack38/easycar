@@ -53,8 +53,8 @@ impl ReservationCandidate {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub enum ExamId {
-    PracticeExam(String),
-    TheoryExam(String),
+    PracticeId(String),
+    TheoryId(String),
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -69,14 +69,14 @@ impl ReservationExam {
     pub fn new_theory_exam(organization_unit_id: String, exam_id: String) -> Self {
         ReservationExam {
             organization_unit_id,
-            exam_id: ExamId::TheoryExam(exam_id),
+            exam_id: ExamId::TheoryId(exam_id),
         }
     }
 
     pub fn new_practice_exam(organization_unit_id: String, exam_id: String) -> Self {
         ReservationExam {
             organization_unit_id,
-            exam_id: ExamId::PracticeExam(exam_id),
+            exam_id: ExamId::PracticeId(exam_id),
         }
     }
 }

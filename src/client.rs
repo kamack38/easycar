@@ -130,6 +130,7 @@ impl InfoCarClient {
             ReservationExam::new_practice_exam(self.user_data.preferred_osk.clone(), exam_id),
             ReservationLanguageAndOsk::default(),
         );
+
         self.client.new_reservation(reservation).await
     }
 
@@ -140,7 +141,7 @@ impl InfoCarClient {
         self.client.reservation_status(reservation_id).await
     }
 
-    pub async fn cancel(&mut self, reservation_id: String) -> Result<(), GenericClientError> {
+    pub async fn cancel(&mut self, reservation_id: String) -> Result<(), EnrollError> {
         self.client.cancel_reservation(reservation_id).await
     }
 }
