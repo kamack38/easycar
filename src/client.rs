@@ -12,7 +12,7 @@ use info_car_api::{
         },
         Client,
     },
-    error::{GenericClientError, LoginError},
+    error::{EnrollError, GenericClientError, LoginError},
     utils::find_n_practice_exams,
 };
 use thiserror::Error;
@@ -101,6 +101,10 @@ impl InfoCarClient {
         }
     }
 
+    pub fn get_token_expire_date(&self) -> Option<DateTime<Utc>> {
+        self.client.token_expire_date
+    }
+
     pub async fn get_nearest_exams(&mut self, number: usize) -> Result<Vec<Exam>, GetExamsError> {
         let schedule = self
             .client
@@ -119,7 +123,7 @@ impl InfoCarClient {
         self.client.my_reservations().await
     }
 
-    pub async fn enroll(&mut self, exam_id: String) -> Result<String, GenericClientError> {
+    pub async fn enroll(&mut self, exam_id: String) -> Result<String, EnrollError> {
         let reservation = NewReservation::new(
             self.candidate_data.clone(),
             ReservationExam::new_practice_exam(self.user_data.preferred_osk.clone(), exam_id),

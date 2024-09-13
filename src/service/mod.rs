@@ -6,7 +6,7 @@ use crate::client::{GetExamsError, InfoCarClient, NewClientError, UserData};
 use crate::utils::readable_time_delta;
 use chrono::{DateTime, Utc};
 use info_car_api::client::reservation::new::ProfileIdType;
-use info_car_api::error::GenericClientError;
+use info_car_api::error::{EnrollError, GenericClientError};
 use teloxide::payloads::SetChatMenuButtonSetters;
 use teloxide::types::{MenuButton, MessageId};
 use teloxide::RequestError;
@@ -50,6 +50,8 @@ pub enum AnswerError {
     #[error(transparent)]
     GenericClientError(#[from] GenericClientError),
     #[error(transparent)]
+    EnrollToExamError(#[from] EnrollError),
+    #[error(transparent)]
     TeloxideError(#[from] RequestError),
 }
 
@@ -79,7 +81,7 @@ async fn waiting_spinner(
 async fn handle_spinner_cmd(
     cmd: Command,
     client: Arc<Mutex<InfoCarClient>>,
-) -> Result<String, GetExamsError> {
+) -> Result<String, AnswerError> {
     match cmd {
         Command::Exams => {
             let exams = client.lock().await.get_nearest_exams(5).await?;

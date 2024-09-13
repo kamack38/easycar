@@ -8,7 +8,11 @@ use tokio::{
 };
 
 pub async fn session_worker(client: Arc<Mutex<InfoCarClient>>) {
-    let mut expire_date = client.lock().await.login().await.unwrap();
+    let mut expire_date = client
+        .lock()
+        .await
+        .get_token_expire_date()
+        .expect("Token expire date is empty");
     loop {
         let duration = expire_date - Utc::now() - ChronoDuration::minutes(5);
         println!("Token expires in: {}", duration.num_seconds());

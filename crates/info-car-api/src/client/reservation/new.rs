@@ -122,6 +122,23 @@ impl NewReservation {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct NewReservationResponse {
+pub enum NewReservationResponse {
+    #[serde(rename = "errors")]
+    Errors(Vec<NewReservationError>),
+    #[serde(untagged)]
+    Success(NewReservationSuccess),
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct NewReservationSuccess {
     pub id: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct NewReservationError {
+    pub code: String,
+    pub path: String,
+    pub user_message: String,
+    pub timestamp: String,
 }

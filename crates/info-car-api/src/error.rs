@@ -5,6 +5,8 @@ use reqwest::Response;
 use thiserror::Error;
 use url;
 
+use crate::client::reservation::new::NewReservationError;
+
 #[derive(Error, Debug)]
 pub enum GenericClientError {
     #[error("Bearer token not provided")]
@@ -59,6 +61,18 @@ pub enum CsrfTokenError {
     TokenNotFound,
     #[error("The CSRF token value could not be found on the input element")]
     TokenValueNotFound,
+}
+
+#[derive(Error, Debug)]
+pub enum EnrollError {
+    #[error("Bearer token not provided")]
+    NoBearer,
+    #[error(transparent)]
+    ReqwestError(#[from] reqwest::Error),
+    #[error(transparent)]
+    JWTError(#[from] JWTError),
+    #[error("{}", .0.iter().map(|v| format!("{}. ", v.user_message)).collect::<String>())]
+    ReservationError(Vec<NewReservationError>),
 }
 
 #[derive(Error, Debug)]

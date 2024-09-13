@@ -20,9 +20,7 @@ use self::{
     },
     word_centers::WordCenters,
 };
-use crate::error::{
-    handle_response, CsrfTokenError, GenericClientError, LoginError, LogoutError, RefreshTokenError,
-};
+use crate::error::*;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct UserInfo {
@@ -231,21 +229,22 @@ impl Client {
     pub async fn new_reservation(
         &self,
         reservation: NewReservation,
-    ) -> Result<String, GenericClientError> {
+    ) -> Result<String, EnrollError> {
         let response = self
             .client
             .post("https://info-car.pl/api/word/reservations")
-            .bearer_auth(self.token.as_ref().ok_or(GenericClientError::NoBearer)?)
+            .bearer_auth(self.token.as_ref().ok_or(EnrollError::NoBearer)?)
             .json(&reservation)
             .send()
             .await?;
 
-        let reservation_id = handle_response(response)?
+        let resp = handle_response(response)?
             .json::<NewReservationResponse>()
-            .await?
-            .id;
-
-        Ok(reservation_id)
+            .await?;
+        match resp {
+            NewReservationResponse::Success(success) => Ok(success.id),
+            NewReservationResponse::Errors(errs) => Err(EnrollError::ReservationError(errs)),
+        }
     }
 
     pub async fn reservation_status(
