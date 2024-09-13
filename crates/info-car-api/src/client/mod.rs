@@ -36,8 +36,6 @@ pub struct Client {
     pub token_expire_date: Option<DateTime<Utc>>,
 }
 
-// TODO: Error if supplied an empty string
-
 impl Client {
     pub fn new() -> Self {
         Client {
@@ -245,6 +243,9 @@ impl Client {
         &self,
         reservation_id: String,
     ) -> Result<ReservationStatus, EnrollError> {
+        if reservation_id.is_empty() {
+            return Err(EnrollError::EmptyArg("reservation_id".to_string()));
+        }
         let response = self
             .client
             .get(format!(
@@ -261,6 +262,9 @@ impl Client {
     }
 
     pub async fn cancel_reservation(&self, reservation_id: String) -> Result<(), EnrollError> {
+        if reservation_id.is_empty() {
+            return Err(EnrollError::EmptyArg("reservation_id".to_string()));
+        }
         let response = self
             .client
             .post(format!(

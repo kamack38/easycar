@@ -73,6 +73,8 @@ pub enum EnrollError {
     JWTError(#[from] JWTError),
     #[error(transparent)]
     GenericEndpointError(#[from] GenericEndpointError),
+    #[error("The supplied argument ({0}) is empty")]
+    EmptyArg(String),
 }
 
 #[derive(Error, Debug)]
