@@ -87,11 +87,7 @@ impl Client {
             .parse()
             .or(Err(RefreshTokenError::ExpireTimeParseError))?;
 
-        self.token_expire_date = Some(
-            Utc::now()
-                .checked_add_signed(Duration::seconds(expire_time_unix))
-                .unwrap(),
-        );
+        self.token_expire_date = Some(Utc::now() + Duration::seconds(expire_time_unix));
 
         self.set_token(new_token.to_owned());
 

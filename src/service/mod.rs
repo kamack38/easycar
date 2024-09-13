@@ -1,5 +1,6 @@
 pub mod workers;
 
+use std::num::ParseIntError;
 use std::sync::Arc;
 
 use crate::client::{GetExamsError, InfoCarClient, NewClientError, UserData};
@@ -181,7 +182,7 @@ async fn answer(
 
             // Stop the spinner
             tx.send(()).unwrap();
-            let message_id = handle.await.unwrap().unwrap();
+            let message_id = handle.await.unwrap()?;
 
             match resp {
                 Ok(message) => {
@@ -206,6 +207,14 @@ pub struct EasyCarService {
     pub chat_id: ChatId,
 }
 
+#[derive(Error, Debug)]
+pub enum NewServiceError {
+    #[error(transparent)]
+    ClientError(#[from] NewClientError),
+    #[error("Failed to parse chat_id ({})", 0)]
+    ChatIdParseError(#[from] ParseIntError),
+}
+
 impl EasyCarService {
     pub async fn new(
         teloxide_token: String,
@@ -214,18 +223,18 @@ impl EasyCarService {
         pesel: String,
         phone_number: String,
         driver_profile_id: ProfileIdType,
-    ) -> Result<Self, NewClientError> {
+    ) -> Result<Self, NewServiceError> {
         Ok(Self {
             bot: Arc::new(Bot::new(&teloxide_token)),
             client: Arc::new(Mutex::new(
                 InfoCarClient::new(user_data, pesel, phone_number, driver_profile_id).await?,
             )),
             teloxide_token,
-            chat_id: ChatId(chat_id.parse().unwrap()),
+            chat_id: ChatId(chat_id.parse()?),
         })
     }
 
-    pub async fn start(self) -> Result<(), ()> {
+    pub async fn start(self) -> Result<(), RequestError> {
         // Get a start date for the /uptime command
         let start_date = Utc::now();
 
@@ -236,15 +245,11 @@ impl EasyCarService {
             self.chat_id,
         ));
 
-        self.bot
-            .set_my_commands(Command::bot_commands())
-            .await
-            .unwrap();
+        self.bot.set_my_commands(Command::bot_commands()).await?;
         self.bot
             .set_chat_menu_button()
             .menu_button(MenuButton::Commands)
-            .await
-            .unwrap();
+            .await?;
 
         Command::repl(
             self.bot,
