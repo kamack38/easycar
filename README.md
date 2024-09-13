@@ -22,16 +22,22 @@ To run this project and use the telegram bot you have to fill in the `Secrets.to
 
 You can create your own bot using the [BotFather](https://t.me/botfather).
 
-## Running 
+## Installing
 
 ```bash
-cargo run
+cargo install --git https://github.com/kamack38/easycar.git
 ```
 
 ## Building
 
 ```bash
-cargo build --release
+cargo build --release --bin easycar-service
+```
+
+## Running
+
+```bash
+RUST_LOG="INFO" ./target/release/easycar-service
 ```
 
 ## Deployment
