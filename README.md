@@ -64,3 +64,4 @@ By default shuttle puts this project to sleep after 30 minutes to disable this r
 cargo-shuttle project restart --idle-minutes 0
 ```
 
+Made with :heart: in :poland:!
