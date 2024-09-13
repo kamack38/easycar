@@ -121,9 +121,7 @@ impl InfoCarClient {
     }
 
     pub async fn get_reservations(&mut self) -> Result<ReservationList, GenericClientError> {
-        let res = self.client.my_reservations().await?;
-        println!("{res:?}");
-        Ok(res)
+        self.client.my_reservations().await
     }
 
     pub async fn enroll(&mut self, exam_id: String) -> Result<String, EnrollError> {

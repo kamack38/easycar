@@ -26,3 +26,8 @@ thiserror = "1.0.63"
 [profile.release]
 strip = true  # Automatically strip symbols from the binary.
 lto = true
+
+[profile.profiling]
+inherits = "release"
+strip = false
+debug = true
