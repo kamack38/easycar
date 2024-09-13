@@ -133,8 +133,8 @@ async fn handle_spinner_cmd(
             let reservation_id = client.lock().await.enroll(exam_id).await?;
 
             Ok(format!(
-                "Enrolled to the exam! The reservation id is <code>{}</code>",
-                reservation_id
+                "Enrolled to the exam! The reservation id is <code>{}</code>\nCheck the status using <code>/status {}</code>",
+                reservation_id, reservation_id
             ))
         }
         Command::Status(reservation_id) => {
