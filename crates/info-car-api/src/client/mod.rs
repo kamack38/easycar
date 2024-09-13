@@ -36,6 +36,8 @@ pub struct Client {
     pub token_expire_date: Option<DateTime<Utc>>,
 }
 
+// TODO: Error if supplied an empty string
+
 impl Client {
     pub fn new() -> Self {
         Client {
@@ -258,22 +260,19 @@ impl Client {
             .ok()?)
     }
 
-    pub async fn cancel_reservation(
-        &self,
-        reservation_id: String,
-    ) -> Result<(), GenericClientError> {
+    pub async fn cancel_reservation(&self, reservation_id: String) -> Result<(), EnrollError> {
         let response = self
             .client
             .post(format!(
                 "https://info-car.pl/api/word/reservations/{reservation_id}/cancel"
             ))
-            .bearer_auth(self.token.as_ref().ok_or(GenericClientError::NoBearer)?)
+            .bearer_auth(self.token.as_ref().ok_or(EnrollError::NoBearer)?)
             .send()
             .await?;
 
-        let resp = handle_response(response)?;
-        println!("{:?}", resp.text().await);
-
-        Ok(())
+        Ok(handle_response(response)?
+            .json::<EndpointResponse<()>>()
+            .await?
+            .ok()?)
     }
 }
