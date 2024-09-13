@@ -5,22 +5,30 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "lowercase")]
-pub enum DriverProfiletype {
+pub enum ProfileIdType {
+    /// Profil kierowcy zawodowego
     PKZ(String),
+    /// Profil kandydata na kierowcę
     PKK(String),
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+impl Default for ProfileIdType {
+    fn default() -> Self {
+        ProfileIdType::PKK(String::default())
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct ReservationCandidate {
-    category: LicenseCategory,
-    email: String,
-    firstname: String,
-    lastname: String,
-    pesel: String,
-    phone_number: String,
+    pub category: LicenseCategory,
+    pub email: String,
+    pub firstname: String,
+    pub lastname: String,
+    pub pesel: String,
+    pub phone_number: String,
     #[serde(flatten)]
-    driver_profile: DriverProfiletype,
+    pub driver_profile: ProfileIdType,
 }
 
 impl ReservationCandidate {
@@ -28,7 +36,7 @@ impl ReservationCandidate {
         userinfo: UserInfo,
         pesel: String,
         phone_number: String,
-        driver_profile: DriverProfiletype,
+        driver_profile: ProfileIdType,
     ) -> Self {
         Self {
             category: LicenseCategory::default(),

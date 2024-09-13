@@ -1,4 +1,5 @@
 use easycar::{service::EasyCarService, UserData};
+use info_car_api::client::reservation::new::ProfileIdType;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -7,16 +8,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Get UserData
     let username = dotenvy::var("USERNAME")?;
     let password = dotenvy::var("PASSWORD")?;
-    // let pesel = dotenvy::var("PESEL")?;
-    // let phone_number = dotenvy::var("PHONE_NUMBER")?;
-    // let pkk = dotenvy::var("PKK")?;
+    let pesel = dotenvy::var("PESEL")?;
+    let phone_number = dotenvy::var("PHONE_NUMBER")?;
+    let pkk = dotenvy::var("PKK")?;
     let osk_id = "3";
+
+    let user_data = UserData::new(username, password, osk_id.to_string());
 
     let chat_id = dotenvy::var("TELEGRAM_CHAT_ID")?;
     let teloxide_token = dotenvy::var("TELOXIDE_TOKEN")?;
-    let user_data = UserData::new(username, password, osk_id.to_string());
 
-    let service = EasyCarService::new(teloxide_token, user_data, chat_id);
+    let service = EasyCarService::new(
+        teloxide_token,
+        user_data,
+        chat_id,
+        pesel,
+        phone_number,
+        ProfileIdType::PKK(pkk),
+    )
+    .await?;
     service.start().await.expect("Service error");
 
     Ok(())

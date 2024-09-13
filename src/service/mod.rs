@@ -2,9 +2,10 @@ pub mod workers;
 
 use std::sync::Arc;
 
-use crate::client::{GetExamsError, InfoCarClient, UserData};
+use crate::client::{GetExamsError, InfoCarClient, NewClientError, UserData};
 use crate::utils::readable_time_delta;
 use chrono::{DateTime, Utc};
+use info_car_api::client::reservation::new::ProfileIdType;
 use info_car_api::error::GenericClientError;
 use teloxide::payloads::SetChatMenuButtonSetters;
 use teloxide::types::{MenuButton, MessageId};
@@ -112,6 +113,14 @@ async fn handle_spinner_cmd(
                 .collect::<String>();
             Ok(text)
         }
+        Command::Enroll(exam_id) => {
+            let reservation_id = client.lock().await.enroll(exam_id).await?;
+
+            Ok(format!(
+                "Enrolled to the exam! The reservation id is {}",
+                reservation_id
+            ))
+        }
         _ => unreachable!(),
     }
 }
@@ -141,13 +150,6 @@ async fn answer(
         Command::Exam => {
             bot.send_message(msg.chat.id, "The current exam is: ")
                 .await?;
-        }
-        Command::Enroll(exam_id) => {
-            bot.send_message(
-                msg.chat.id,
-                format!("Do you want to enroll to exam {exam_id}"),
-            )
-            .await?;
         }
         // Handle spinner for all commands that use it
         _ => {
@@ -186,13 +188,22 @@ pub struct EasyCarService {
 }
 
 impl EasyCarService {
-    pub fn new(teloxide_token: String, user_data: UserData, chat_id: String) -> Self {
-        Self {
+    pub async fn new(
+        teloxide_token: String,
+        user_data: UserData,
+        chat_id: String,
+        pesel: String,
+        phone_number: String,
+        driver_profile_id: ProfileIdType,
+    ) -> Result<Self, NewClientError> {
+        Ok(Self {
             bot: Arc::new(Bot::new(&teloxide_token)),
-            client: Arc::new(Mutex::new(InfoCarClient::new(user_data))),
+            client: Arc::new(Mutex::new(
+                InfoCarClient::new(user_data, pesel, phone_number, driver_profile_id).await?,
+            )),
             teloxide_token,
             chat_id: ChatId(chat_id.parse().unwrap()),
-        }
+        })
     }
 
     pub async fn start(self) -> Result<(), ()> {
