@@ -94,3 +94,20 @@ impl fmt::Display for PossibleStatuses {
         write!(f, "{}", status_str)
     }
 }
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub enum EndpointResponse<T> {
+    #[serde(rename = "errors")]
+    Errors(Vec<GenericError>),
+    #[serde(untagged)]
+    Success(T),
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct GenericError {
+    pub code: String,
+    pub path: Option<String>,
+    pub user_message: String,
+    pub timestamp: String,
+}

@@ -6,6 +6,7 @@ use std::collections::HashMap;
 
 use chrono::{DateTime, Duration, Utc};
 use reqwest::ClientBuilder;
+use reservation::{new::NewReservationSuccess, EndpointResponse};
 use scraper::{Html, Selector};
 use serde::Deserialize;
 use word_centers::WordRescheduleEnabled;
@@ -13,10 +14,7 @@ use word_centers::WordRescheduleEnabled;
 use self::{
     exam_schedule::ExamSchedule,
     reservation::{
-        list::ReservationList,
-        new::{NewReservation, NewReservationResponse},
-        status::ReservationStatus,
-        LicenseCategory,
+        list::ReservationList, new::NewReservation, status::ReservationStatus, LicenseCategory,
     },
     word_centers::WordCenters,
 };
@@ -239,28 +237,35 @@ impl Client {
             .await?;
 
         let resp = handle_response(response)?
-            .json::<NewReservationResponse>()
+            .json::<EndpointResponse<NewReservationSuccess>>()
             .await?;
         match resp {
-            NewReservationResponse::Success(success) => Ok(success.id),
-            NewReservationResponse::Errors(errs) => Err(EnrollError::ReservationError(errs)),
+            EndpointResponse::Success(success) => Ok(success.id),
+            EndpointResponse::Errors(errs) => Err(EnrollError::GenericEndpointError(errs)),
         }
     }
 
     pub async fn reservation_status(
         &self,
         reservation_id: String,
-    ) -> Result<ReservationStatus, GenericClientError> {
+    ) -> Result<ReservationStatus, EnrollError> {
         let response = self
             .client
             .get(format!(
                 "https://info-car.pl/api/word/reservations/{reservation_id}"
             ))
-            .bearer_auth(self.token.as_ref().ok_or(GenericClientError::NoBearer)?)
+            .bearer_auth(self.token.as_ref().ok_or(EnrollError::NoBearer)?)
             .send()
             .await?;
 
-        Ok(handle_response(response)?.json().await?)
+        let resp = handle_response(response)?
+            .json::<EndpointResponse<ReservationStatus>>()
+            .await?;
+
+        match resp {
+            EndpointResponse::Success(success) => Ok(success),
+            EndpointResponse::Errors(errs) => Err(EnrollError::GenericEndpointError(errs)),
+        }
     }
 
     pub async fn cancel_reservation(

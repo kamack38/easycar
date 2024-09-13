@@ -41,6 +41,9 @@ enum Command {
     /// Enroll to the exam
     #[command()]
     Enroll(String),
+    /// Show reservation status
+    #[command()]
+    Status(String),
 }
 
 #[derive(Debug, Error)]
@@ -121,6 +124,20 @@ async fn handle_spinner_cmd(
             Ok(format!(
                 "Enrolled to the exam! The reservation id is {}",
                 reservation_id
+            ))
+        }
+        Command::Status(reservation_id) => {
+            let status = client.lock().await.status(reservation_id).await?;
+
+            Ok(format!(
+                "ID: {}\nStatus: {}\nReason: {}\nWord: {}\nAddress: {}\nCategory: {}\nDate: {}",
+                status.id,
+                status.status.status,
+                status.status.message.unwrap_or("None".to_string()),
+                status.exam.organization_unit_name,
+                status.exam.address,
+                status.exam.category,
+                status.exam.exam_date,
             ))
         }
         _ => unreachable!(),

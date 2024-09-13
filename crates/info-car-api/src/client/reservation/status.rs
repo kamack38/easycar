@@ -13,7 +13,7 @@ pub struct ReservationStatus {
     pub exam: ReservationExam,
     pub is_reminder_sent: Option<String>,
     pub is_first_reminder_sent: Option<String>,
-    pub invoice: ReservationInvoice,
+    pub invoice: Option<ReservationInvoice>,
     pub cancellation_message: Option<String>,
     pub active_payment: Option<String>,
     pub awaiting_reschedule: bool,

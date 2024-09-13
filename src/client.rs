@@ -8,6 +8,7 @@ use info_car_api::{
                 NewReservation, ProfileIdType, ReservationCandidate, ReservationExam,
                 ReservationLanguageAndOsk,
             },
+            status::ReservationStatus,
             LicenseCategory,
         },
         Client,
@@ -120,7 +121,9 @@ impl InfoCarClient {
     }
 
     pub async fn get_reservations(&mut self) -> Result<ReservationList, GenericClientError> {
-        self.client.my_reservations().await
+        let res = self.client.my_reservations().await?;
+        println!("{res:?}");
+        Ok(res)
     }
 
     pub async fn enroll(&mut self, exam_id: String) -> Result<String, EnrollError> {
@@ -130,5 +133,12 @@ impl InfoCarClient {
             ReservationLanguageAndOsk::default(),
         );
         self.client.new_reservation(reservation).await
+    }
+
+    pub async fn status(
+        &mut self,
+        reservation_id: String,
+    ) -> Result<ReservationStatus, EnrollError> {
+        self.client.reservation_status(reservation_id).await
     }
 }

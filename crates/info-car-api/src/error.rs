@@ -5,7 +5,7 @@ use reqwest::Response;
 use thiserror::Error;
 use url;
 
-use crate::client::reservation::new::NewReservationError;
+use crate::client::reservation::GenericError;
 
 #[derive(Error, Debug)]
 pub enum GenericClientError {
@@ -71,8 +71,8 @@ pub enum EnrollError {
     ReqwestError(#[from] reqwest::Error),
     #[error(transparent)]
     JWTError(#[from] JWTError),
-    #[error("{}", .0.iter().map(|v| format!("{}. ", v.user_message)).collect::<String>())]
-    ReservationError(Vec<NewReservationError>),
+    #[error("{}", .0.iter().map(|v| format!("{} ({}). ", v.user_message, v.code)).collect::<String>())]
+    GenericEndpointError(Vec<GenericError>),
 }
 
 #[derive(Error, Debug)]
