@@ -4,7 +4,7 @@ use std::num::ParseIntError;
 use std::sync::Arc;
 
 use crate::client::{GetExamsError, InfoCarClient, NewClientError, UserData};
-use crate::utils::readable_time_delta;
+use crate::utils::{date_from_string, readable_time_delta};
 use chrono::{DateTime, Utc};
 use info_car_api::client::reservation::new::ProfileIdType;
 use info_car_api::error::{EnrollError, GenericClientError};
@@ -45,6 +45,9 @@ enum Command {
     /// Show reservation status
     #[command()]
     Status(String),
+    /// Cancel reservation
+    #[command()]
+    Cancel(String),
 }
 
 #[derive(Debug, Error)]
@@ -93,7 +96,14 @@ async fn handle_spinner_cmd(
                 "The available exams are:\n{}",
                 exams
                     .iter()
-                    .map(|exam| format!("Exam ({}): {}\n", exam.id, exam.date))
+                    .map(|exam| format!(
+                        "Exam ({}): {} (in {} days)\n",
+                        exam.id,
+                        exam.date,
+                        date_from_string(&exam.date)
+                            .signed_duration_since(Utc::now())
+                            .num_days()
+                    ))
                     .collect::<String>()
             ))
         }
@@ -139,6 +149,14 @@ async fn handle_spinner_cmd(
                 status.exam.address,
                 status.exam.category,
                 status.exam.exam_date,
+            ))
+        }
+        Command::Cancel(reservation_id) => {
+            let _ = client.lock().await.cancel(reservation_id.clone()).await?;
+
+            Ok(format!(
+                "Successfully canceled reservation: {}",
+                reservation_id
             ))
         }
         _ => unreachable!(),

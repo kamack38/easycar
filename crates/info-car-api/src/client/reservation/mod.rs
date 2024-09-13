@@ -1,6 +1,7 @@
 use core::fmt;
 
 use serde::{Deserialize, Serialize};
+use thiserror::Error;
 
 pub mod list;
 pub mod new;
@@ -101,6 +102,20 @@ pub enum EndpointResponse<T> {
     Errors(Vec<GenericError>),
     #[serde(untagged)]
     Success(T),
+}
+
+#[derive(Error, Debug)]
+#[error("{}", .0.iter().map(|v| format!("{} ({}). ", v.user_message, v.code)).collect::<String>())]
+pub struct GenericEndpointError(Vec<GenericError>);
+
+impl<T> EndpointResponse<T> {
+    pub fn ok(self) -> Result<T, GenericEndpointError> {
+        use EndpointResponse::*;
+        match self {
+            Success(v) => Ok(v),
+            Errors(errs) => Err(GenericEndpointError(errs)),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

@@ -139,4 +139,8 @@ impl InfoCarClient {
     ) -> Result<ReservationStatus, EnrollError> {
         self.client.reservation_status(reservation_id).await
     }
+
+    pub async fn cancel(&mut self, reservation_id: String) -> Result<(), GenericClientError> {
+        self.client.cancel_reservation(reservation_id).await
+    }
 }

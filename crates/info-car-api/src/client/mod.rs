@@ -232,13 +232,11 @@ impl Client {
             .send()
             .await?;
 
-        let resp = handle_response(response)?
+        Ok(handle_response(response)?
             .json::<EndpointResponse<NewReservationSuccess>>()
-            .await?;
-        match resp {
-            EndpointResponse::Success(success) => Ok(success.id),
-            EndpointResponse::Errors(errs) => Err(EnrollError::GenericEndpointError(errs)),
-        }
+            .await?
+            .ok()?
+            .id)
     }
 
     pub async fn reservation_status(
@@ -254,14 +252,10 @@ impl Client {
             .send()
             .await?;
 
-        let resp = handle_response(response)?
+        Ok(handle_response(response)?
             .json::<EndpointResponse<ReservationStatus>>()
-            .await?;
-
-        match resp {
-            EndpointResponse::Success(success) => Ok(success),
-            EndpointResponse::Errors(errs) => Err(EnrollError::GenericEndpointError(errs)),
-        }
+            .await?
+            .ok()?)
     }
 
     pub async fn cancel_reservation(
@@ -277,7 +271,8 @@ impl Client {
             .send()
             .await?;
 
-        handle_response(response)?;
+        let resp = handle_response(response)?;
+        println!("{:?}", resp.text().await);
 
         Ok(())
     }
