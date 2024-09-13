@@ -1,7 +1,7 @@
 use crate::{client::InfoCarClient, utils::date_from_string};
 use chrono::{Duration as ChronoDuration, Utc};
 use std::sync::Arc;
-use teloxide::prelude::*;
+use teloxide::{prelude::*, types::ParseMode};
 use tokio::{
     sync::Mutex,
     time::{sleep, Duration as TokioDuration},
@@ -54,6 +54,9 @@ pub async fn scheduler(client: Arc<Mutex<InfoCarClient>>, bot: Arc<Bot>, chat_id
         );
 
         log::info!("{exam_message}");
-        bot.send_message(chat_id, exam_message).await.unwrap();
+        bot.send_message(chat_id, exam_message)
+            .parse_mode(ParseMode::Html)
+            .await
+            .unwrap();
     }
 }

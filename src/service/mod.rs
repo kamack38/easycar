@@ -9,7 +9,7 @@ use chrono::{DateTime, Utc};
 use info_car_api::client::reservation::new::ProfileIdType;
 use info_car_api::error::{EnrollError, GenericClientError};
 use teloxide::payloads::SetChatMenuButtonSetters;
-use teloxide::types::{MenuButton, MessageId};
+use teloxide::types::{MenuButton, MessageId, ParseMode};
 use teloxide::RequestError;
 use teloxide::{prelude::*, utils::command::BotCommands};
 use thiserror::Error;
@@ -97,7 +97,7 @@ async fn handle_spinner_cmd(
                 exams
                     .iter()
                     .map(|exam| format!(
-                        "Exam ({}): {} (in {} days)\n",
+                        "Exam (<code>{}</code>): {} (in {} days)\n",
                         exam.id,
                         exam.date,
                         date_from_string(&exam.date)
@@ -133,7 +133,7 @@ async fn handle_spinner_cmd(
             let reservation_id = client.lock().await.enroll(exam_id).await?;
 
             Ok(format!(
-                "Enrolled to the exam! The reservation id is {}",
+                "Enrolled to the exam! The reservation id is <code>{}</code>",
                 reservation_id
             ))
         }
@@ -205,6 +205,7 @@ async fn answer(
             match resp {
                 Ok(message) => {
                     bot.edit_message_text(msg.chat.id, message_id, message)
+                        .parse_mode(ParseMode::Html)
                         .await?;
                 }
                 Err(err) => {
