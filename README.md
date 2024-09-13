@@ -70,4 +70,10 @@ By default shuttle puts this project to sleep after 30 minutes to disable this r
 cargo-shuttle project restart --idle-minutes 0
 ```
 
+## License
+
+The `easycar` project is distributed under the AGPL-3.0 license and the `info-car-api` crate is distributed under the LGPL-3.0 license. The license files are stored in the respective project roots.
+
+Copyright (C) 2024  Kamack38
+
 Made with :heart: in :poland:!
