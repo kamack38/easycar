@@ -15,7 +15,7 @@ pub async fn session_worker(client: Arc<Mutex<InfoCarClient>>) {
         .expect("Token expire date is empty");
     loop {
         let duration = expire_date - Utc::now() - ChronoDuration::minutes(5);
-        println!("Token expires in: {}", duration.num_seconds());
+        log::info!("Token expires in: {}", duration.num_seconds());
         sleep(TokioDuration::from_secs(
             duration.num_seconds().try_into().unwrap(),
         ))
@@ -39,7 +39,7 @@ pub async fn scheduler(client: Arc<Mutex<InfoCarClient>>, bot: Arc<Bot>, chat_id
         };
 
         if closest_exam.id == last_exam_id {
-            println!("No change...");
+            log::trace!("No change...");
             continue;
         }
 
@@ -49,11 +49,11 @@ pub async fn scheduler(client: Arc<Mutex<InfoCarClient>>, bot: Arc<Bot>, chat_id
             .signed_duration_since(Utc::now())
             .num_days();
         let exam_message = format!(
-            "New exam is available! The next exam date is {} (in {} days)",
-            closest_exam.date, duration
+            "New exam is available! The next exam date is {} (in {} days) (ID: <code>{}</code>)",
+            closest_exam.date, duration, &last_exam_id
         );
 
-        println!("{exam_message}");
+        log::info!("{exam_message}");
         bot.send_message(chat_id, exam_message).await.unwrap();
     }
 }

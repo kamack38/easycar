@@ -19,6 +19,7 @@ impl shuttle_runtime::Service for ShuttleService {
 async fn init(
     #[shuttle_runtime::Secrets] secrets: shuttle_runtime::SecretStore,
 ) -> Result<ShuttleService, shuttle_runtime::Error> {
+    pretty_env_logger::init();
     let username = secrets.get("USERNAME").unwrap();
     let password = secrets.get("PASSWORD").unwrap();
     let pesel = secrets.get("PESEL").unwrap();

@@ -277,7 +277,7 @@ impl EasyCarService {
                     if let Err(err) = answer(bot, msg, cmd, client, start_date).await {
                         match err {
                             AnswerError::TeloxideError(err) => return Err(err),
-                            _ => println!("{err}"),
+                            _ => log::error!("{err}"),
                         }
                     }
                     Ok(())

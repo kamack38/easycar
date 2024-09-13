@@ -3,6 +3,7 @@ use info_car_api::client::reservation::new::ProfileIdType;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    pretty_env_logger::init();
     dotenvy::from_filename("Secrets.toml")?;
 
     // Get UserData
