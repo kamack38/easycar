@@ -5,6 +5,7 @@ use thiserror::Error;
 
 pub mod list;
 pub mod new;
+pub mod payment;
 pub mod status;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

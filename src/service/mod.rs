@@ -45,6 +45,9 @@ enum Command {
     /// Show reservation status
     #[command()]
     Status(String),
+    /// Pay for the exam using a blik code (takes a space sperated reservation id and blik code)
+    #[command()]
+    Pay(String),
     /// Cancel reservation
     #[command()]
     Cancel(String),
@@ -60,6 +63,8 @@ pub enum AnswerError {
     EnrollToExamError(#[from] EnrollError),
     #[error(transparent)]
     TeloxideError(#[from] RequestError),
+    #[error("Too few arguments! Expected: {0}, got {1}!")]
+    TooFewArguments(u32, u32),
 }
 
 async fn waiting_spinner(
@@ -76,7 +81,7 @@ async fn waiting_spinner(
     // Simulate the spinner by continuously editing the message
     for frame in iter {
         if rx.try_recv().is_ok() {
-            break; // Stop the spinner when the signal is recieved
+            break; // Stop the spinner when the signal is received
         }
         bot.edit_message_text(chat_id, sent_message.id, *frame)
             .await?;
@@ -157,6 +162,30 @@ async fn handle_spinner_cmd(
             Ok(format!(
                 "Successfully canceled reservation: {}",
                 reservation_id
+            ))
+        }
+        Command::Pay(commands) => {
+            let mut commands = commands.split_whitespace();
+
+            let reservation_id = commands
+                .next()
+                .ok_or(AnswerError::TooFewArguments(2, 0))?
+                .to_string();
+            let blik_code = commands
+                .next()
+                .ok_or(AnswerError::TooFewArguments(2, 1))?
+                .to_string();
+
+            let response = client
+                .lock()
+                .await
+                .pay(reservation_id.clone(), blik_code)
+                .await?;
+
+            Ok(format!(
+                "Paid for exam {reservation_id} with {:.2} PLN.\nStatus: {}",
+                response.paid_amount as f64 / 100.0,
+                response.payment_status
             ))
         }
         _ => unreachable!(),

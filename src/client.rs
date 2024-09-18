@@ -8,6 +8,7 @@ use info_car_api::{
                 NewReservation, ProfileIdType, ReservationCandidate, ReservationExam,
                 ReservationLanguageAndOsk,
             },
+            payment::BlikPaymentResponse,
             status::ReservationStatus,
             LicenseCategory,
         },
@@ -143,5 +144,15 @@ impl InfoCarClient {
 
     pub async fn cancel(&mut self, reservation_id: String) -> Result<(), EnrollError> {
         self.client.cancel_reservation(reservation_id).await
+    }
+
+    pub async fn pay(
+        &mut self,
+        reservation_id: String,
+        blik_code: String,
+    ) -> Result<BlikPaymentResponse, EnrollError> {
+        self.client
+            .pay_with_blik(reservation_id, blik_code, false)
+            .await
     }
 }

@@ -6,7 +6,11 @@ use std::collections::HashMap;
 
 use chrono::{DateTime, Duration, Utc};
 use reqwest::ClientBuilder;
-use reservation::{new::NewReservationSuccess, EndpointResponse};
+use reservation::{
+    new::NewReservationSuccess,
+    payment::{BlikPaymentRequest, BlikPaymentResponse},
+    EndpointResponse,
+};
 use scraper::{Html, Selector};
 use serde::Deserialize;
 use word_centers::WordRescheduleEnabled;
@@ -276,6 +280,32 @@ impl Client {
 
         Ok(handle_response(response)?
             .json::<EndpointResponse<()>>()
+            .await?
+            .ok()?)
+    }
+
+    pub async fn pay_with_blik(
+        &self,
+        reservation_id: String,
+        blik_code: String,
+        balance_usage: bool,
+    ) -> Result<BlikPaymentResponse, EnrollError> {
+        if reservation_id.is_empty() {
+            return Err(EnrollError::EmptyArg("reservation_id".to_string()));
+        }
+        let request = BlikPaymentRequest::new(blik_code, balance_usage);
+        let response = self
+            .client
+            .post(format!(
+                "https://info-car.pl/api/word/reservations/{reservation_id}/blik"
+            ))
+            .json(&request)
+            .bearer_auth(self.token.as_ref().ok_or(EnrollError::NoBearer)?)
+            .send()
+            .await?;
+
+        Ok(handle_response(response)?
+            .json::<EndpointResponse<BlikPaymentResponse>>()
             .await?
             .ok()?)
     }
