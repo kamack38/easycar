@@ -1,5 +1,6 @@
 pub mod workers;
 
+use std::error::Error;
 use std::num::ParseIntError;
 use std::sync::Arc;
 
@@ -307,7 +308,14 @@ impl EasyCarService {
                     if let Err(err) = answer(bot, msg, cmd, client, start_date).await {
                         match err {
                             AnswerError::TeloxideError(err) => return Err(err),
-                            _ => log::error!("{err}"),
+                            _ => {
+                                log::error!(
+                                    "{err}{}",
+                                    err.source()
+                                        .map(|src| format!(". Source: {src}"))
+                                        .unwrap_or("".to_owned())
+                                );
+                            }
                         }
                     }
                     Ok(())
