@@ -5,7 +5,7 @@ use reqwest::Response;
 use thiserror::Error;
 use url;
 
-use crate::client::reservation::GenericEndpointError;
+use crate::types::GenericEndpointError;
 
 #[derive(Error, Debug)]
 pub enum GenericClientError {

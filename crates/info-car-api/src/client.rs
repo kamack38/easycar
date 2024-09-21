@@ -1,28 +1,12 @@
-pub mod exam_schedule;
-pub mod reservation;
-pub mod word_centers;
-
 use std::{collections::HashMap, num::NonZeroU32};
+
+use crate::error::*;
+use crate::types::*;
 
 use chrono::{DateTime, Duration, Utc};
 use reqwest::ClientBuilder;
-use reservation::{
-    new::NewReservationSuccess,
-    payment::{BlikPaymentRequest, BlikPaymentResponse},
-    EndpointResponse,
-};
 use scraper::{Html, Selector};
 use serde::Deserialize;
-use word_centers::WordRescheduleEnabled;
-
-use self::{
-    exam_schedule::ExamSchedule,
-    reservation::{
-        list::ReservationList, new::NewReservation, status::ReservationStatus, LicenseCategory,
-    },
-    word_centers::WordCenters,
-};
-use crate::error::*;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct UserInfo {

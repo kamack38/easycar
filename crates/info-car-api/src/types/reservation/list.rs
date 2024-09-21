@@ -1,22 +1,13 @@
-use std::num::NonZeroU32;
-
 use serde::Deserialize;
 use serde_aux::field_attributes::deserialize_number_from_string;
+use std::num::NonZeroU32;
 
-use super::{LicenseCategory, Status};
-
-#[derive(Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct TheoryOrPracticeExam {
-    pub exam_id: String,
-    pub additional_info: String,
-    pub date: String,
-}
+use crate::types::{LicenseCategory, Status, TheoryOrPracticeExam};
 
 // TODO: Convert theory or pracitce to a type
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Clone, Debug, Eq, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Exam {
+pub struct ReservationExam {
     #[serde(deserialize_with = "deserialize_number_from_string")]
     pub organization_unit_id: NonZeroU32,
     pub organization_unit_name: String,
@@ -26,7 +17,7 @@ pub struct Exam {
     pub address: String,
 }
 
-#[derive(Deserialize, Default, Debug, Clone)]
+#[derive(Clone, Debug, Default, Eq, PartialEq, Deserialize)]
 pub struct Candidate {
     pub firstname: String,
     pub lastname: String,
@@ -37,7 +28,7 @@ pub struct Candidate {
 pub struct ReservationListItem {
     pub awaiting_reschedule: bool,
     pub status: Status,
-    pub exam: Exam,
+    pub exam: ReservationExam,
     pub candidate: Candidate,
     pub id: String,
 }

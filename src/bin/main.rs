@@ -1,7 +1,7 @@
 use std::num::NonZeroU32;
 
 use easycar::{service::EasyCarService, UserData};
-use info_car_api::client::reservation::new::ProfileIdType;
+use info_car_api::types::ProfileIdType;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

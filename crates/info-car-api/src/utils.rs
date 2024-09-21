@@ -1,4 +1,4 @@
-use crate::client::exam_schedule::{Exam, ExamSchedule};
+use crate::types::{Exam, ExamSchedule};
 use std::ops::Not;
 
 pub fn find_n_practice_exams(schedule: ExamSchedule, number: usize) -> Option<Vec<Exam>> {

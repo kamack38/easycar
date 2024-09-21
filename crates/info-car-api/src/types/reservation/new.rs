@@ -2,11 +2,11 @@ use std::num::NonZeroU32;
 
 use crate::client::UserInfo;
 
-use super::LicenseCategory;
+use crate::types::LicenseCategory;
 use serde::{Deserialize, Serialize};
 use serde_aux::field_attributes::deserialize_number_from_string;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ProfileIdType {
     /// Profil kierowcy zawodowego
@@ -21,20 +21,20 @@ impl Default for ProfileIdType {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+#[derive(Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ReservationCandidate {
-    pub category: LicenseCategory,
-    pub email: String,
+pub struct NewReservationCandidate {
     pub firstname: String,
     pub lastname: String,
-    pub pesel: String,
+    pub email: String,
     pub phone_number: String,
+    pub pesel: String,
+    pub category: LicenseCategory,
     #[serde(flatten)]
     pub driver_profile: ProfileIdType,
 }
 
-impl ReservationCandidate {
+impl NewReservationCandidate {
     pub fn new_from_userinfo(
         userinfo: UserInfo,
         pesel: String,
@@ -53,39 +53,39 @@ impl ReservationCandidate {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum ExamId {
     PracticeId(String),
     TheoryId(String),
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ReservationExam {
+pub struct NewReservationExam {
     #[serde(deserialize_with = "deserialize_number_from_string")]
     organization_unit_id: NonZeroU32,
     #[serde(flatten)]
     exam_id: ExamId,
 }
 
-impl ReservationExam {
+impl NewReservationExam {
     pub fn new_theory_exam(organization_unit_id: NonZeroU32, exam_id: String) -> Self {
-        ReservationExam {
+        NewReservationExam {
             organization_unit_id,
             exam_id: ExamId::TheoryId(exam_id),
         }
     }
 
     pub fn new_practice_exam(organization_unit_id: NonZeroU32, exam_id: String) -> Self {
-        ReservationExam {
+        NewReservationExam {
             organization_unit_id,
             exam_id: ExamId::PracticeId(exam_id),
         }
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReservationLanguageAndOsk {
     language: String, // eg. POLISH
@@ -103,18 +103,18 @@ impl Default for ReservationLanguageAndOsk {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NewReservation {
-    candidate: ReservationCandidate,
-    exam: ReservationExam,
+    candidate: NewReservationCandidate,
+    exam: NewReservationExam,
     language_and_osk: ReservationLanguageAndOsk,
 }
 
 impl NewReservation {
     pub fn new(
-        candidate: ReservationCandidate,
-        exam: ReservationExam,
+        candidate: NewReservationCandidate,
+        exam: NewReservationExam,
         language_and_osk: ReservationLanguageAndOsk,
     ) -> Self {
         Self {
@@ -125,7 +125,7 @@ impl NewReservation {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct NewReservationSuccess {
     pub id: String,
 }

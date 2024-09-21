@@ -2,21 +2,9 @@ use std::num::NonZeroU32;
 
 use chrono::{DateTime, Days, Utc};
 use info_car_api::{
-    client::{
-        exam_schedule::Exam,
-        reservation::{
-            list::ReservationList,
-            new::{
-                NewReservation, ProfileIdType, ReservationCandidate, ReservationExam,
-                ReservationLanguageAndOsk,
-            },
-            payment::BlikPaymentResponse,
-            status::ReservationStatus,
-            LicenseCategory,
-        },
-        Client,
-    },
+    client::Client,
     error::{EnrollError, GenericClientError, LoginError},
+    types::*,
     utils::find_n_practice_exams,
 };
 use thiserror::Error;
@@ -57,7 +45,7 @@ pub enum NewClientError {
 pub struct InfoCarClient {
     client: Client,
     user_data: UserData,
-    candidate_data: ReservationCandidate,
+    candidate_data: NewReservationCandidate,
 }
 
 impl InfoCarClient {
@@ -75,7 +63,7 @@ impl InfoCarClient {
         Ok(Self {
             client,
             user_data,
-            candidate_data: ReservationCandidate::new_from_userinfo(
+            candidate_data: NewReservationCandidate::new_from_userinfo(
                 user_info,
                 pesel,
                 phone_number,
@@ -130,7 +118,7 @@ impl InfoCarClient {
     pub async fn enroll(&mut self, exam_id: String) -> Result<String, EnrollError> {
         let reservation = NewReservation::new(
             self.candidate_data.clone(),
-            ReservationExam::new_practice_exam(self.user_data.preferred_osk.clone(), exam_id),
+            NewReservationExam::new_practice_exam(self.user_data.preferred_osk.clone(), exam_id),
             ReservationLanguageAndOsk::default(),
         );
 
