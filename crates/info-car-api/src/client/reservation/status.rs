@@ -1,5 +1,8 @@
+use std::num::NonZeroU32;
+
 use super::{LicenseCategory, Status};
 use serde::Deserialize;
+use serde_aux::field_attributes::deserialize_number_from_string;
 
 #[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -36,7 +39,8 @@ pub struct ReservationCandidate {
 #[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ReservationExam {
-    pub organization_unit_id: String,
+    #[serde(deserialize_with = "deserialize_number_from_string")]
+    pub organization_unit_id: NonZeroU32,
     pub organization_unit_name: String,
     pub latitude: String,
     pub longitude: String,

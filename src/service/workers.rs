@@ -13,6 +13,7 @@ pub async fn session_worker(client: Arc<Mutex<InfoCarClient>>) {
         .await
         .get_token_expire_date()
         .expect("Token expire date is empty");
+    log::trace!("Got the token expire date ({expire_date})");
     loop {
         let duration = expire_date - Utc::now() - ChronoDuration::minutes(5);
         log::info!("Token expires in: {}", duration.num_seconds());
@@ -27,13 +28,14 @@ pub async fn session_worker(client: Arc<Mutex<InfoCarClient>>) {
 pub async fn scheduler(client: Arc<Mutex<InfoCarClient>>, bot: Arc<Bot>, chat_id: ChatId) {
     let mut last_exam_id = "".to_owned();
     loop {
-        sleep(TokioDuration::from_secs(10)).await;
         let closest_exam = match client.lock().await.get_nearest_exams(1).await {
             Ok(mut v) => v.pop().unwrap(),
             Err(err) => {
+                log::error!("Got an error while retrieving new exams: {err}");
                 bot.send_message(chat_id, format!("Error: {err}"))
                     .await
                     .unwrap();
+                sleep(TokioDuration::from_secs(10)).await;
                 continue;
             }
         };
@@ -58,5 +60,6 @@ pub async fn scheduler(client: Arc<Mutex<InfoCarClient>>, bot: Arc<Bot>, chat_id
             .parse_mode(ParseMode::Html)
             .await
             .unwrap();
+        sleep(TokioDuration::from_secs(10)).await;
     }
 }

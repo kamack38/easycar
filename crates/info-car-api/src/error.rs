@@ -9,8 +9,8 @@ use crate::client::reservation::GenericEndpointError;
 
 #[derive(Error, Debug)]
 pub enum GenericClientError {
-    #[error("Bearer token not provided")]
-    NoBearer,
+    #[error(transparent)]
+    NoBearer(#[from] NoBearerError),
     #[error(transparent)]
     ReqwestError(#[from] reqwest::Error),
     #[error(transparent)]
@@ -31,8 +31,8 @@ pub enum LoginError {
 pub enum LogoutError {
     #[error(transparent)]
     ReqwestError(#[from] reqwest::Error),
-    #[error("The auth token is not set")]
-    NoToken,
+    #[error(transparent)]
+    NoBearer(#[from] NoBearerError),
 }
 
 #[derive(Error, Debug)]
@@ -65,8 +65,8 @@ pub enum CsrfTokenError {
 
 #[derive(Error, Debug)]
 pub enum EnrollError {
-    #[error("Bearer token not provided")]
-    NoBearer,
+    #[error(transparent)]
+    NoBearer(#[from] NoBearerError),
     #[error(transparent)]
     ReqwestError(#[from] reqwest::Error),
     #[error(transparent)]
@@ -76,6 +76,10 @@ pub enum EnrollError {
     #[error("The supplied argument ({0}) is empty")]
     EmptyArg(String),
 }
+
+#[derive(Error, Debug)]
+#[error("Bearer token not found")]
+pub struct NoBearerError;
 
 #[derive(Error, Debug)]
 #[error("Error ({}): {} ({})", .0.error_type, .0.description, .0.url)]

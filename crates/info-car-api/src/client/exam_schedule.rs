@@ -1,3 +1,5 @@
+use std::num::NonZeroU32;
+
 use serde::Deserialize;
 use serde_aux::field_attributes::deserialize_number_from_string;
 
@@ -40,7 +42,8 @@ pub struct Schedule {
 #[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ExamSchedule {
-    pub organization_id: String,
+    #[serde(deserialize_with = "deserialize_number_from_string")]
+    pub organization_id: NonZeroU32,
     pub is_osk_vehicle_reservation_enabled: bool,
     pub is_reschedule_reservation: bool,
     pub category: LicenseCategory,

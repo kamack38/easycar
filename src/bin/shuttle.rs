@@ -1,3 +1,5 @@
+use std::num::NonZeroU32;
+
 use easycar::{service::EasyCarService, UserData};
 use info_car_api::client::reservation::new::ProfileIdType;
 
@@ -25,9 +27,13 @@ async fn init(
     let pesel = secrets.get("PESEL").unwrap();
     let phone_number = secrets.get("PHONE_NUMBER").unwrap();
     let pkk = secrets.get("PKK").unwrap();
-    let osk_id = "3";
+    let osk_id: u32 = 3;
 
-    let user_data = UserData::new(username, password, osk_id.to_string());
+    let user_data = UserData::new(
+        username,
+        password,
+        NonZeroU32::try_from(osk_id).expect("Osk_id is not a positive integer"),
+    );
 
     let chat_id = secrets.get("TELEGRAM_CHAT_ID").unwrap();
     let teloxide_key = secrets

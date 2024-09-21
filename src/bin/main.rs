@@ -1,3 +1,5 @@
+use std::num::NonZeroU32;
+
 use easycar::{service::EasyCarService, UserData};
 use info_car_api::client::reservation::new::ProfileIdType;
 
@@ -12,9 +14,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let pesel = dotenvy::var("PESEL")?;
     let phone_number = dotenvy::var("PHONE_NUMBER")?;
     let pkk = dotenvy::var("PKK")?;
-    let osk_id = "3";
+    let osk_id: u32 = 3;
 
-    let user_data = UserData::new(username, password, osk_id.to_string());
+    let user_data = UserData::new(
+        username,
+        password,
+        NonZeroU32::try_from(osk_id).expect("Osk_id is not a positive integer"),
+    );
 
     let chat_id = dotenvy::var("TELEGRAM_CHAT_ID")?;
     let teloxide_token = dotenvy::var("TELOXIDE_TOKEN")?;

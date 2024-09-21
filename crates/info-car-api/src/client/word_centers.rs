@@ -1,3 +1,5 @@
+use std::num::NonZeroU32;
+
 use serde::Deserialize;
 use serde_aux::field_attributes::deserialize_number_from_string;
 
@@ -15,7 +17,7 @@ pub struct Province {
 #[derive(Deserialize, Debug, Clone)]
 pub struct WordRescheduleEnabled {
     #[serde(deserialize_with = "deserialize_number_from_string")]
-    pub id: i32,
+    pub organization_id: NonZeroU32,
     pub reschedule_enabled: bool,
 }
 
@@ -23,7 +25,7 @@ pub struct WordRescheduleEnabled {
 #[serde(rename_all = "camelCase")]
 pub struct Word {
     #[serde(deserialize_with = "deserialize_number_from_string")]
-    pub id: i32,
+    pub id: NonZeroU32,
     pub name: String,
     pub address: String,
     pub latitude: String,

@@ -2,7 +2,7 @@ pub mod exam_schedule;
 pub mod reservation;
 pub mod word_centers;
 
-use std::collections::HashMap;
+use std::{collections::HashMap, num::NonZeroU32};
 
 use chrono::{DateTime, Duration, Utc};
 use reqwest::ClientBuilder;
@@ -55,6 +55,10 @@ impl Client {
 
     pub fn set_token(&mut self, token: String) {
         self.token = Some(token);
+    }
+
+    fn get_token(&self) -> Result<&String, NoBearerError> {
+        self.token.as_ref().ok_or(NoBearerError)
     }
 
     pub async fn refresh_token(&mut self) -> Result<(), RefreshTokenError> {
@@ -143,7 +147,7 @@ impl Client {
         self.client
             .get(format!(
                 "https://info-car.pl/oauth2/endsession?id_token_hint={}",
-                self.token.as_ref().ok_or(LogoutError::NoToken)?
+                self.get_token()?
             ))
             .send()
             .await?;
@@ -155,7 +159,7 @@ impl Client {
         Ok(self
             .client
             .get("https://info-car.pl/oauth2/userinfo")
-            .bearer_auth(self.token.as_ref().ok_or(GenericClientError::NoBearer)?)
+            .bearer_auth(self.get_token()?)
             .send()
             .await?
             .json()
@@ -166,7 +170,7 @@ impl Client {
         let response = self
             .client
             .get("https://info-car.pl/api/word/reservations")
-            .bearer_auth(self.token.as_ref().ok_or(GenericClientError::NoBearer)?)
+            .bearer_auth(self.get_token()?)
             .send()
             .await?;
         Ok(handle_response(response)?.json().await?)
@@ -176,7 +180,7 @@ impl Client {
         let response = self
             .client
             .get("https://info-car.pl/api/word/word-centers")
-            .bearer_auth(self.token.as_ref().ok_or(GenericClientError::NoBearer)?)
+            .bearer_auth(self.get_token()?)
             .send()
             .await?;
         Ok(handle_response(response)?.json().await?)
@@ -184,44 +188,48 @@ impl Client {
 
     pub async fn is_word_reschedule_enabled(
         &self,
-        word_id: i32,
-    ) -> Result<bool, GenericClientError> {
+        word_id: NonZeroU32,
+    ) -> Result<bool, EnrollError> {
         let response = self
             .client
             .get(format!(
                 "https://info-car.pl/api/word/word-centers/reschedule-enabled/{word_id}"
             ))
-            .bearer_auth(self.token.as_ref().ok_or(GenericClientError::NoBearer)?)
+            .bearer_auth(self.get_token()?)
             .send()
             .await?;
 
         Ok(handle_response(response)?
-            .json::<WordRescheduleEnabled>()
+            .json::<EndpointResponse<WordRescheduleEnabled>>()
             .await?
+            .ok()?
             .reschedule_enabled)
     }
 
     pub async fn exam_schedule(
         &self,
-        word_id: String,
+        word_id: NonZeroU32,
         end_date: DateTime<Utc>,
         start_date: DateTime<Utc>,
         category: LicenseCategory,
-    ) -> Result<ExamSchedule, GenericClientError> {
+    ) -> Result<ExamSchedule, EnrollError> {
         let mut map = HashMap::<&str, String>::new();
         map.insert("category", category.to_string());
         map.insert("endDate", end_date.to_string());
         map.insert("startDate", start_date.to_string());
-        map.insert("wordId", word_id);
+        map.insert("wordId", word_id.to_string());
 
         let response = self
             .client
             .put("https://info-car.pl/api/word/word-centers/exam-schedule")
-            .bearer_auth(self.token.as_ref().ok_or(GenericClientError::NoBearer)?)
+            .bearer_auth(self.get_token()?)
             .json(&map)
             .send()
             .await?;
-        Ok(handle_response(response)?.json().await?)
+        Ok(handle_response(response)?
+            .json::<EndpointResponse<ExamSchedule>>()
+            .await?
+            .ok()?)
     }
 
     pub async fn new_reservation(
@@ -231,7 +239,7 @@ impl Client {
         let response = self
             .client
             .post("https://info-car.pl/api/word/reservations")
-            .bearer_auth(self.token.as_ref().ok_or(EnrollError::NoBearer)?)
+            .bearer_auth(self.get_token()?)
             .json(&reservation)
             .send()
             .await?;
@@ -255,7 +263,7 @@ impl Client {
             .get(format!(
                 "https://info-car.pl/api/word/reservations/{reservation_id}"
             ))
-            .bearer_auth(self.token.as_ref().ok_or(EnrollError::NoBearer)?)
+            .bearer_auth(self.get_token()?)
             .send()
             .await?;
 
@@ -274,7 +282,7 @@ impl Client {
             .post(format!(
                 "https://info-car.pl/api/word/reservations/{reservation_id}/cancel"
             ))
-            .bearer_auth(self.token.as_ref().ok_or(EnrollError::NoBearer)?)
+            .bearer_auth(self.get_token()?)
             .send()
             .await?;
 
@@ -300,7 +308,7 @@ impl Client {
                 "https://info-car.pl/api/word/reservations/{reservation_id}/blik"
             ))
             .json(&request)
-            .bearer_auth(self.token.as_ref().ok_or(EnrollError::NoBearer)?)
+            .bearer_auth(self.get_token()?)
             .send()
             .await?;
 

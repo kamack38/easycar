@@ -1,7 +1,10 @@
+use std::num::NonZeroU32;
+
 use crate::client::UserInfo;
 
 use super::LicenseCategory;
 use serde::{Deserialize, Serialize};
+use serde_aux::field_attributes::deserialize_number_from_string;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "lowercase")]
@@ -60,20 +63,21 @@ pub enum ExamId {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ReservationExam {
-    organization_unit_id: String,
+    #[serde(deserialize_with = "deserialize_number_from_string")]
+    organization_unit_id: NonZeroU32,
     #[serde(flatten)]
     exam_id: ExamId,
 }
 
 impl ReservationExam {
-    pub fn new_theory_exam(organization_unit_id: String, exam_id: String) -> Self {
+    pub fn new_theory_exam(organization_unit_id: NonZeroU32, exam_id: String) -> Self {
         ReservationExam {
             organization_unit_id,
             exam_id: ExamId::TheoryId(exam_id),
         }
     }
 
-    pub fn new_practice_exam(organization_unit_id: String, exam_id: String) -> Self {
+    pub fn new_practice_exam(organization_unit_id: NonZeroU32, exam_id: String) -> Self {
         ReservationExam {
             organization_unit_id,
             exam_id: ExamId::PracticeId(exam_id),

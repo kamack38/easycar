@@ -1,3 +1,5 @@
+use std::num::NonZeroU32;
+
 use serde::Deserialize;
 use serde_aux::field_attributes::deserialize_number_from_string;
 
@@ -16,7 +18,7 @@ pub struct TheoryOrPracticeExam {
 #[serde(rename_all = "camelCase")]
 pub struct Exam {
     #[serde(deserialize_with = "deserialize_number_from_string")]
-    pub organization_unit_id: i32,
+    pub organization_unit_id: NonZeroU32,
     pub organization_unit_name: String,
     pub theory: Option<TheoryOrPracticeExam>,
     pub practice: Option<TheoryOrPracticeExam>,

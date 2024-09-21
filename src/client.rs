@@ -1,3 +1,5 @@
+use std::num::NonZeroU32;
+
 use chrono::{DateTime, Days, Utc};
 use info_car_api::{
     client::{
@@ -23,11 +25,11 @@ use thiserror::Error;
 pub struct UserData {
     pub username: String,
     pub password: String,
-    pub preferred_osk: String,
+    pub preferred_osk: NonZeroU32,
 }
 
 impl UserData {
-    pub fn new(username: String, password: String, preferred_osk: String) -> Self {
+    pub fn new(username: String, password: String, preferred_osk: NonZeroU32) -> Self {
         UserData {
             username,
             password,
@@ -39,7 +41,7 @@ impl UserData {
 #[derive(Error, Debug)]
 pub enum GetExamsError {
     #[error(transparent)]
-    GenericClientError(#[from] GenericClientError),
+    GenericClientError(#[from] EnrollError),
     #[error("No exams found")]
     NoExamsError,
 }
