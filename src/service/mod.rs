@@ -31,6 +31,9 @@ enum Command {
     /// Get the bot uptime
     #[command()]
     Uptime,
+    /// Gets current chat id
+    #[command()]
+    ChatId,
     /// Get exam dates
     #[command()]
     Exams,
@@ -213,6 +216,14 @@ async fn answer(
                     readable_time_delta(Utc::now() - start_date)
                 ),
             )
+            .await?;
+        }
+        Command::ChatId => {
+            bot.send_message(
+                msg.chat.id,
+                format!("The current ChatId is: <code>{}</code>", msg.chat.id),
+            )
+            .parse_mode(ParseMode::Html)
             .await?;
         }
         Command::Exam => {
