@@ -1,6 +1,6 @@
 use crate::{client::InfoCarClient, utils::date_from_string};
 use chrono::{Duration as ChronoDuration, Utc};
-use std::sync::Arc;
+use std::{error::Error, sync::Arc};
 use teloxide::{prelude::*, types::ParseMode};
 use tokio::{
     sync::Mutex,
@@ -31,7 +31,12 @@ pub async fn scheduler(client: Arc<Mutex<InfoCarClient>>, bot: Arc<Bot>, chat_id
         let closest_exam = match client.lock().await.get_nearest_exams(1).await {
             Ok(mut v) => v.pop().unwrap(),
             Err(err) => {
-                log::error!("Got an error while retrieving new exams: {err}");
+                log::error!(
+                    "Got an error while retrieving new exams: {err}{}",
+                    err.source()
+                        .map(|src| format!(". Source: {src}"))
+                        .unwrap_or("".to_owned())
+                );
                 bot.send_message(chat_id, format!("Error: {err}"))
                     .await
                     .unwrap();
