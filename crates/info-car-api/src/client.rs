@@ -62,6 +62,8 @@ impl Client {
             .send()
             .await?;
 
+        log::debug!("{response:?}");
+
         let parsed_response: HashMap<String, String> = serde_urlencoded::from_str(
             response
                 .url()
@@ -88,6 +90,8 @@ impl Client {
 
     async fn get_csrf_token(&self, url: &str) -> Result<String, CsrfTokenError> {
         let response = self.client.get(url).send().await?;
+
+        log::debug!("{response:?}");
 
         let fragment = Html::parse_fragment(&response.text().await?);
         let csrf_selector =
@@ -157,6 +161,9 @@ impl Client {
             .bearer_auth(self.get_token()?)
             .send()
             .await?;
+
+        log::debug!("{response:?}");
+
         Ok(handle_response(response)?.json().await?)
     }
 
@@ -167,6 +174,9 @@ impl Client {
             .bearer_auth(self.get_token()?)
             .send()
             .await?;
+
+        log::debug!("{response:?}");
+
         Ok(handle_response(response)?.json().await?)
     }
 
@@ -182,6 +192,8 @@ impl Client {
             .bearer_auth(self.get_token()?)
             .send()
             .await?;
+
+        log::debug!("{response:?}");
 
         Ok(handle_response(response)?
             .json::<EndpointResponse<WordRescheduleEnabled>>()
@@ -210,6 +222,9 @@ impl Client {
             .json(&map)
             .send()
             .await?;
+
+        log::debug!("{response:?}");
+
         Ok(handle_response(response)?
             .json::<EndpointResponse<ExamSchedule>>()
             .await?
@@ -227,6 +242,8 @@ impl Client {
             .json(&reservation)
             .send()
             .await?;
+
+        log::debug!("{response:?}");
 
         Ok(handle_response(response)?
             .json::<EndpointResponse<NewReservationSuccess>>()
@@ -251,6 +268,8 @@ impl Client {
             .send()
             .await?;
 
+        log::debug!("{response:?}");
+
         Ok(handle_response(response)?
             .json::<EndpointResponse<ReservationStatus>>()
             .await?
@@ -269,6 +288,8 @@ impl Client {
             .bearer_auth(self.get_token()?)
             .send()
             .await?;
+
+        log::debug!("{response:?}");
 
         Ok(handle_response(response)?
             .json::<EndpointResponse<()>>()
@@ -295,6 +316,8 @@ impl Client {
             .bearer_auth(self.get_token()?)
             .send()
             .await?;
+
+        log::debug!("{response:?}");
 
         Ok(handle_response(response)?
             .json::<EndpointResponse<BlikPaymentResponse>>()
