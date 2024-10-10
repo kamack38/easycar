@@ -1,5 +1,4 @@
 use crate::types::{Exam, ExamSchedule};
-use std::ops::Not;
 
 pub fn find_n_practice_exams(schedule: ExamSchedule, number: usize) -> Option<Vec<Exam>> {
     let exams: Vec<Exam> = schedule
@@ -10,7 +9,7 @@ pub fn find_n_practice_exams(schedule: ExamSchedule, number: usize) -> Option<Ve
         .flat_map(|hour| hour.practice_exams.into_iter())
         .take(number)
         .collect();
-    exams.is_empty().not().then(|| exams)
+    (!exams.is_empty()).then_some(exams)
 }
 
 pub fn find_all_practice_exams(schedule: &ExamSchedule) -> Vec<&Exam> {
