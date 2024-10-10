@@ -14,15 +14,11 @@ pub fn find_n_practice_exams(schedule: ExamSchedule, number: usize) -> Option<Ve
 }
 
 pub fn find_all_practice_exams(schedule: &ExamSchedule) -> Vec<&Exam> {
-    let mut all_practice_exams = Vec::new();
-
-    for day in &schedule.schedule.scheduled_days {
-        for hour in &day.scheduled_hours {
-            for exam in &hour.practice_exams {
-                all_practice_exams.push(exam);
-            }
-        }
-    }
-
-    all_practice_exams
+    schedule
+        .schedule
+        .scheduled_days
+        .iter()
+        .flat_map(|day| day.scheduled_hours.iter())
+        .flat_map(|hour| hour.practice_exams.iter())
+        .collect()
 }
