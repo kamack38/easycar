@@ -11,7 +11,7 @@ pub enum EndpointResponse<T> {
 
 #[derive(Error, Debug)]
 #[error("{}", .0.iter().map(|v| format!("{} ({}). ", v.user_message, v.code)).collect::<String>())]
-pub struct GenericEndpointError(Vec<GenericError>);
+pub struct GenericEndpointError(pub Vec<GenericError>);
 
 impl<T> EndpointResponse<T> {
     pub fn ok(self) -> Result<T, GenericEndpointError> {
