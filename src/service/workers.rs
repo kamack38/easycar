@@ -55,14 +55,15 @@ pub async fn scheduler(client: Arc<Mutex<InfoCarClient>>, bot: Arc<Bot>, chat_id
         let closest_exam = match client.lock().await.get_nearest_exams(1).await {
             Ok(mut v) => v.pop().unwrap(),
             Err(err) => {
-                if let GetExamsError::GenericClientError(enroll_error) = &err {
-                    if let EnrollError::GenericEndpointError(generic_error) = enroll_error {
-                        if generic_error.0.get(0).expect("Empty vector").code == "invalid_token" {
-                            bot.send_message(chat_id, "The token was invalid reloging...")
-                                .await
-                                .unwrap();
-                            client.lock().await.refresh_token().await.unwrap();
-                        }
+                if let GetExamsError::GenericClientError(EnrollError::GenericEndpointError(
+                    generic_error,
+                )) = &err
+                {
+                    if generic_error.0.first().expect("Empty vector").code == "invalid_token" {
+                        bot.send_message(chat_id, "The token was invalid reloging...")
+                            .await
+                            .unwrap();
+                        client.lock().await.refresh_token().await.unwrap();
                     }
                 }
                 log::error!(

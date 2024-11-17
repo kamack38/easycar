@@ -1,6 +1,7 @@
 pub mod workers;
 
 use std::error::Error;
+use std::fmt::Write;
 use std::num::ParseIntError;
 use std::sync::Arc;
 
@@ -103,17 +104,18 @@ async fn handle_spinner_cmd(
             let exams = client.lock().await.get_nearest_exams(5).await?;
             Ok(format!(
                 "The available exams are:\n{}",
-                exams
-                    .iter()
-                    .map(|exam| format!(
-                        "Exam (<code>{}</code>): {} (in {} days)\n",
+                exams.iter().fold(String::new(), |mut output, exam| {
+                    let _ = writeln!(
+                        output,
+                        "Exam (<code>{}</code>): {} (in {} days)",
                         exam.id,
                         exam.date,
                         date_from_string(&exam.date)
                             .signed_duration_since(Utc::now())
                             .num_days()
-                    ))
-                    .collect::<String>()
+                    );
+                    output
+                })
             ))
         }
         Command::Reservations => {
@@ -122,8 +124,9 @@ async fn handle_spinner_cmd(
             let text: String = reservations
                 .items
                 .iter()
-                .map(|v| {
-                    format!(
+                .fold(String::new(), |mut output, v| {
+                    let _ = write!(
+                        output,
                         "• At {} in {} ({})\n\n",
                         v.exam
                             .practice
@@ -133,9 +136,9 @@ async fn handle_spinner_cmd(
                             .date,
                         v.exam.organization_unit_name,
                         v.status.status
-                    )
-                })
-                .collect::<String>();
+                    );
+                    output
+                });
             Ok(text)
         }
         Command::Enroll(exam_id) => {
@@ -161,7 +164,7 @@ async fn handle_spinner_cmd(
             ))
         }
         Command::Cancel(reservation_id) => {
-            let _ = client.lock().await.cancel(reservation_id.clone()).await?;
+            client.lock().await.cancel(reservation_id.clone()).await?;
 
             Ok(format!(
                 "Successfully canceled reservation: {}",

@@ -101,7 +101,7 @@ impl InfoCarClient {
         let schedule = self
             .client
             .exam_schedule(
-                self.user_data.preferred_osk.clone(),
+                self.user_data.preferred_osk,
                 Utc::now(),
                 Utc::now().checked_add_days(Days::new(31)).unwrap(),
                 LicenseCategory::B,
@@ -118,7 +118,7 @@ impl InfoCarClient {
     pub async fn enroll(&mut self, exam_id: String) -> Result<String, EnrollError> {
         let reservation = NewReservation::new(
             self.candidate_data.clone(),
-            NewReservationExam::new_practice_exam(self.user_data.preferred_osk.clone(), exam_id),
+            NewReservationExam::new_practice_exam(self.user_data.preferred_osk, exam_id),
             ReservationLanguageAndOsk::default(),
         );
 
