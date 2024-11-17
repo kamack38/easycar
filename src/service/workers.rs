@@ -3,7 +3,7 @@ use crate::{
     utils::date_from_string,
 };
 use chrono::{Duration as ChronoDuration, Utc};
-use info_car_api::{client, error::EnrollError};
+use info_car_api::error::EnrollError;
 use std::{error::Error, sync::Arc};
 use teloxide::{prelude::*, types::ParseMode};
 use tokio::{
@@ -12,19 +12,32 @@ use tokio::{
 };
 
 pub async fn session_worker(client: Arc<Mutex<InfoCarClient>>) {
+    // A margin is used to refresh the token while it's still valid
+    let token_refresh_margin = ChronoDuration::minutes(5);
     let mut expire_date = client
         .lock()
         .await
         .get_token_expire_date()
         .expect("Token expire date is empty");
     log::trace!("Got the token expire date ({expire_date})");
+
     loop {
-        let duration = expire_date - Utc::now() - ChronoDuration::minutes(5);
-        log::info!("Token expires in: {}", duration.num_seconds());
+        let duration = expire_date - Utc::now() - token_refresh_margin;
+        let token_refresh_date = expire_date - token_refresh_margin;
+        log::info!(
+            "JWT will be refreshed on {} (in {} seconds)",
+            token_refresh_date,
+            duration.num_seconds()
+        );
         sleep(TokioDuration::from_secs(
-            duration.num_seconds().try_into().unwrap(),
+            duration
+                .num_seconds()
+                .try_into()
+                .expect("Could not convert i64 TimeDelta to a u64"),
         ))
         .await;
+
+        log::info!("Refreshing the token...");
         expire_date = client.lock().await.refresh_token().await.unwrap();
     }
 }
