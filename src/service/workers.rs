@@ -14,6 +14,7 @@ use tokio::{
 pub async fn session_worker(client: Arc<Mutex<InfoCarClient>>) {
     // A margin is used to refresh the token while it's still valid
     let token_refresh_margin = ChronoDuration::minutes(5);
+    let refresh_retry_timeout = ChronoDuration::seconds(15);
     let mut expire_date = client
         .lock()
         .await
@@ -38,7 +39,13 @@ pub async fn session_worker(client: Arc<Mutex<InfoCarClient>>) {
         .await;
 
         log::info!("Refreshing the token...");
-        expire_date = client.lock().await.refresh_token().await.unwrap();
+        expire_date = match client.lock().await.refresh_token().await {
+            Ok(v) => v,
+            Err(err) => {
+                log::error!("Failed refresh the token. The attempt will be repeated in {} seconds. Error: {}", refresh_retry_timeout.num_seconds(), err);
+                Utc::now() + refresh_retry_timeout
+            }
+        };
     }
 }
 
