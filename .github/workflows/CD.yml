@@ -9,7 +9,6 @@ permissions:
 
 jobs:
   build-and-publish:
-    needs: changelog
     name: Building a binary for ${{ matrix.job.os }}
     runs-on: ${{ matrix.job.os }}
     strategy:
