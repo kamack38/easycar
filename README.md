@@ -1,8 +1,9 @@
 # EasyCar
 
-This is a repo for easy car - an app which finds the newest exams on [info-car.pl](https://info-car.pl/)
+This is a repo for easy car - an app which finds the newest exams on
+[info-car.pl](https://info-car.pl/)
 
-**Remember to give a ⭐.**
+**Remember to give this repo a ⭐.**
 
 ## Features
 
@@ -12,13 +13,14 @@ This is a repo for easy car - an app which finds the newest exams on [info-car.p
 - [x] Enrolling to exam
 - [x] Easy deployment to shuttle.rs
 - [x] Mobile notifications via a telegram
-- [x] Customisable telegram bot 
+- [x] Customisable telegram bot
 - [x] Checking exam status
 - [x] Paying for exam using BLIK code
 
 ## Prerequisites
 
-To run this project and use the telegram bot you have to fill in the `Secrets.toml.example` file and then rename it to `Secrets.toml`.
+To run this project and use the telegram bot you have to fill in the
+`Secrets.toml.example` file and then rename it to `Secrets.toml`.
 
 You can create your own bot using the [BotFather](https://t.me/botfather).
 
@@ -64,7 +66,8 @@ To deploy run:
 cargo shuttle deploy
 ```
 
-By default shuttle puts this project to sleep after 30 minutes to disable this run:
+By default shuttle puts this project to sleep after 30 minutes to disable this
+run:
 
 ```bash
 cargo-shuttle project restart --idle-minutes 0
@@ -72,8 +75,10 @@ cargo-shuttle project restart --idle-minutes 0
 
 ## License
 
-The `easycar` project is distributed under the AGPL-3.0 license and the `info-car-api` crate is distributed under the LGPL-3.0 license. The license files are stored in the respective project roots.
+The `easycar` project is distributed under the AGPL-3.0 license and the
+`info-car-api` crate is distributed under the LGPL-3.0 license. The license
+files are stored in the respective project roots.
 
-Copyright (C) 2024  Kamack38
+Copyright (C) 2024 Kamack38
 
 Made with :heart: in :poland:!

@@ -1,0 +1,94 @@
+name: 🚀 Continuous Deployment
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-publish:
+    needs: changelog
+    name: Building a binary for ${{ matrix.job.os }}
+    runs-on: ${{ matrix.job.os }}
+    strategy:
+      matrix:
+        job:
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            use-cross: false
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            use-cross: false
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            use-cross: false
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            use-cross: false
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            use-cross: true
+          - os: ubuntu-latest
+            target: i686-unknown-linux-gnu
+            use-cross: true
+          - os: ubuntu-latest
+            target: arm-unknown-linux-gnueabihf
+            use-cross: true
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            use-cross: true
+
+    steps:
+      - name: 🦀 Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.job.target }}
+      - name: 📚 Checkout
+        uses: actions/checkout@v4
+      - name: 🦀 Install cross
+        if: matrix.job.use-cross
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cross
+      - name: 🔧 Build
+        env:
+          MACOSX_DEPLOYMENT_TARGET: 10.7
+        shell: bash
+        run: |
+          if [[ "${{ matrix.job.use-cross }}" == "true" ]]; then
+            cross build --bin easycar-service --release --target ${{ matrix.job.target }}
+          else
+            cargo build --bin easycar-service --release --target ${{ matrix.job.target }}
+          fi
+
+      - name: Install required dependencies
+        shell: bash
+        run: |
+          if [[ ${{ matrix.job.target }} == arm-unknown-linux-gnueabihf ]]; then
+              sudo apt update
+              sudo apt-get install -y binutils-arm-linux-gnueabihf
+          fi
+          if [[ ${{ matrix.job.target }} == aarch64-unknown-linux-gnu ]]; then
+              sudo apt update
+              sudo apt-get install -y binutils-aarch64-linux-gnu
+          fi
+
+      - name: 📦 Package final binary
+        shell: bash
+        env:
+          TARGET: ${{ matrix.job.target }}
+          PROJECT_NAME: easycar
+          BIN_NAME: easycar-service
+          OS_NAME: ${{ matrix.job.os }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: ./scripts/before_deploy.sh
+
+      - name: 🎓 Upload binaries to the release
+        uses: softprops/action-gh-release@v1
+        with:
+          fail_on_unmatched_files: true
+          tag_name: ${{ github.event.release.tag_name }}
+          files: |
+            easycar-*-${{ matrix.job.target }}.*
