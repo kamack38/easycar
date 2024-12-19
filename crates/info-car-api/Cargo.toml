@@ -5,14 +5,14 @@ edition = "2021"
 license = "LGPL-3.0-only"
 
 [dependencies]
-chrono = { version = "0.4.38", features = ["serde"] }
+chrono = { version = "0.4.39", features = ["serde"] }
 log = "0.4.22"
 regex = "1.11.1"
 reqwest = { version = "0.12.9", features = ["json", "rustls-tls", "cookies"] }
-rustls = "0.23.19"
-scraper = "0.21.0"
-serde = { version = "1.0.215", features = ["derive"] }
+rustls = "0.23.20"
+scraper = "0.22.0"
+serde = { version = "1.0.216", features = ["derive"] }
 serde-aux = "4.5.0"
 serde_urlencoded = "0.7.1"
-thiserror = "2.0.3"
-url = "2.5.2"
+thiserror = "2.0.8"
+url = "2.5.4"
