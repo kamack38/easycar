@@ -15,4 +15,4 @@ serde = { version = "1.0.216", features = ["derive"] }
 serde-aux = "4.5.0"
 serde_urlencoded = "0.7.1"
 thiserror = "2.0.8"
-url = "2.5.4"
+url = "2.5.2"
