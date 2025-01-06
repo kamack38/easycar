@@ -21,11 +21,13 @@ impl shuttle_runtime::Service for ShuttleService {
 async fn init(
     #[shuttle_runtime::Secrets] secrets: shuttle_runtime::SecretStore,
 ) -> Result<ShuttleService, shuttle_runtime::Error> {
-    let username = secrets.get("USERNAME").unwrap();
-    let password = secrets.get("PASSWORD").unwrap();
-    let pesel = secrets.get("PESEL").unwrap();
-    let phone_number = secrets.get("PHONE_NUMBER").unwrap();
-    let pkk = secrets.get("PKK").unwrap();
+    let username = secrets.get("USERNAME").expect("No USRENAME provided!");
+    let password = secrets.get("PASSWORD").expect("No PASSWORD provided!");
+    let pesel = secrets.get("PESEL").expect("No PESEL provided!");
+    let phone_number = secrets
+        .get("PHONE_NUMBER")
+        .expect("No PHONE_NUMBER provided!");
+    let pkk = secrets.get("PKK").expect("No PKK provided!");
     let osk_id: u32 = 3;
 
     let user_data = UserData::new(
@@ -38,6 +40,8 @@ async fn init(
     let teloxide_key = secrets
         .get("TELOXIDE_TOKEN")
         .expect("You need a teloxide key set for this to work!");
+
+    println!("{teloxide_key}");
 
     Ok(ShuttleService(
         EasyCarService::new(
