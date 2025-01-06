@@ -4,3 +4,4 @@
 *.txt
 Secrets*.toml
 .shuttle*
+/target
