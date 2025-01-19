@@ -57,20 +57,19 @@ cargo install cargo-shuttle
 and login to your account:
 
 ```bash
-cargo shuttle login
+shuttle login
+```
+
+Create a new project:
+
+```bash
+shuttle init
 ```
 
 To deploy run:
 
 ```bash
-cargo shuttle deploy
-```
-
-By default shuttle puts this project to sleep after 30 minutes to disable this
-run:
-
-```bash
-cargo-shuttle project restart --idle-minutes 0
+shuttle deploy
 ```
 
 ## License

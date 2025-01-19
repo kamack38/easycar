@@ -1,0 +1,28 @@
+[package]
+name = "easycar"
+version = "0.1.0"
+edition = "2021"
+license = "AGPL-3.0-only"
+default-run = "easycar-service"
+repository = "https://github.com/kamack38/easycar"
+
+[[bin]]
+name = "easycar"
+path = "src/bin/shuttle.rs"
+
+[[bin]]
+name = "easycar-service"
+path = "src/bin/main.rs"
+
+[dependencies]
+chrono = "0.4.39"
+dotenvy = "0.15.7"
+tokio = { version = "1.43.0", features = ["rt-multi-thread", "macros", "sync"] }
+info-car-api = { version = "0.1.0", path = "../info-car-api" }
+reqwest = "0.12.12"
+teloxide = { version = "0.13.0", features = ["macros"] }
+chrono-tz = "0.10.1"
+shuttle-runtime = "0.51.0"
+thiserror = "2.0.11"
+pretty_env_logger = "0.5.0"
+log = "0.4.25"
