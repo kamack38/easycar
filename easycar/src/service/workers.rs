@@ -51,7 +51,7 @@ pub async fn session_worker(client: Arc<Mutex<InfoCarClient>>) {
 
 pub async fn scheduler(client: Arc<Mutex<InfoCarClient>>, bot: Arc<Bot>, chat_id: ChatId) {
     let mut last_exam_id = "".to_owned();
-    let mut interval = interval(TokioDuration::from_secs(10));
+    let mut interval = interval(TokioDuration::from_secs(15));
     loop {
         interval.tick().await;
         let closest_exam = match client.lock().await.get_nearest_exams(1).await {
