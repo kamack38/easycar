@@ -1,12 +1,13 @@
 use core::fmt;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
 pub enum LicenseCategory {
     A,
     A1,
     A2,
     AM,
+    #[default]
     B,
     B1,
     BE,
@@ -44,11 +45,5 @@ impl fmt::Display for LicenseCategory {
             LicenseCategory::PT => "PT",
         };
         write!(f, "{}", category)
-    }
-}
-
-impl Default for LicenseCategory {
-    fn default() -> Self {
-        LicenseCategory::B
     }
 }

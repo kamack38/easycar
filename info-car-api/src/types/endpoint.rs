@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::fmt::Write;
 use thiserror::Error;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -10,7 +11,7 @@ pub enum EndpointResponse<T> {
 }
 
 #[derive(Error, Debug)]
-#[error("{}", .0.iter().map(|v| format!("{} ({}). ", v.user_message, v.code)).collect::<String>())]
+#[error("{}", .0.iter().fold(String::new(), |mut prev, v| {let _ = write!(prev, "{} ({}). ", v.user_message, v.code); prev}))]
 pub struct GenericEndpointError(pub Vec<GenericError>);
 
 impl<T> EndpointResponse<T> {
