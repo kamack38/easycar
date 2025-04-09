@@ -17,7 +17,7 @@ path = "src/bin/main.rs"
 [dependencies]
 chrono = "0.4.40"
 dotenvy = "0.15.7"
-tokio = { version = "1.43.0", features = ["macros", "sync"] }
+tokio = { version = "1.43.1", features = ["macros", "sync"] }
 info-car-api = { version = "0.1.0", path = "../info-car-api" }
 reqwest = "0.12.12"
 teloxide = { version = "0.13.0", features = ["macros"] }
