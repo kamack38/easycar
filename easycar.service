@@ -1,5 +1,5 @@
 [Unit]
-Description=EasyCar daemon - find newest exams on info-car.pl
+Description=EasyCar daemon - find the newest exams on info-car.pl
 After=network.target
 
 [Service]
