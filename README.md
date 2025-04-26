@@ -45,7 +45,7 @@ RUST_LOG="INFO" ./target/release/easycar-service
 ## Running as a daemon
 
 User systemd unit file is provided (easycar.service).
-Secrets.toml needs to reside in the home directory of an user.
+`Secrets.toml` needs to reside in the home directory of a user.
 After the installation copy the unit file to ~/.config/systemd/user/ and enable + start it:
 
 ```bash
