@@ -46,7 +46,7 @@ RUST_LOG="INFO" ./target/release/easycar-service
 
 User systemd unit file is provided (easycar.service).
 Secrets.toml needs to reside in the home directory of an user.
-After the installation copy the unitfile to ~/.config/systemd/user/ and enable + start it:
+After the installation copy the unit file to ~/.config/systemd/user/ and enable + start it:
 
 ```bash
 systemctl --user enable --now easycar.service
