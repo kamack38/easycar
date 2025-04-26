@@ -52,7 +52,7 @@ After the installation copy the unit file to ~/.config/systemd/user/ and enable 
 systemctl --user enable --now easycar.service
 ```
 
-If you prefer it to restart automagically after the reboot, enable lingering for your user:
+If you want it to start automatically after a reboot, enable lingering for your user:
 
 ```bash
 sudo loginctl enable-linger "$(whoami)"
