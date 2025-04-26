@@ -1,0 +1,11 @@
+[Unit]
+Description=EasyCar daemon - find newest exams on info-car.pl
+After=network.target
+
+[Service]
+ExecStart=~/.cargo/bin/easycar-service
+Restart=on-failure
+Environment=RUST_LOG=info
+
+[Install]
+WantedBy=default.target

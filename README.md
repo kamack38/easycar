@@ -42,6 +42,22 @@ cargo build --release --bin easycar-service
 RUST_LOG="INFO" ./target/release/easycar-service
 ```
 
+## Running as a daemon
+
+User systemd unitfile is provided (easycar.service).
+Secrets.toml needs to reside in the home directory of an user.
+After the installation copy the unitfile to ~/.config/systemd/user/ and enable + start it:
+
+```bash
+systemctl --user enable --now easycar.service
+```
+
+If you prefer it to restart automagically after the reboot, enable lingering for your user:
+
+```bash
+sudo loginctl enable-linger "$(whoami)"
+```
+
 ## Deployment
 
 This repo provides a [shuttle](shuttle.rs) deployment.
