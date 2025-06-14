@@ -19,8 +19,8 @@ This is a repo for easy car - an app which finds the newest exams on
 
 ## Prerequisites
 
-To run this project and use the telegram bot you have to fill in the
-`Secrets.toml.example` file and then rename it to `Secrets.toml`.
+To run this project and use the telegram bot you have to fill in the `Secrets.toml.example` file and
+then rename it to `Secrets.toml`.
 
 You can create your own bot using the [BotFather](https://t.me/botfather).
 
@@ -44,9 +44,9 @@ RUST_LOG="INFO" ./target/release/easycar-service
 
 ## Running as a daemon
 
-A user systemd unit file is provided (`easycar.service`).
-`Secrets.toml` needs to reside in the home directory of a user.
-After completing the installation, copy the unit file to `~/.config/systemd/user/` and then enable and start the service:
+A user systemd unit file is provided (`easycar.service`). `Secrets.toml` needs to reside in the home
+directory of a user. After completing the installation, copy the unit file to
+`~/.config/systemd/user/` and then enable and start the service:
 
 ```bash
 systemctl --user enable --now easycar.service
@@ -60,9 +60,9 @@ sudo loginctl enable-linger "$(whoami)"
 
 ## Deployment
 
-This repo provides a [shuttle](shuttle.rs) deployment.
+This repo provides a [shuttle](https://shuttle.dev) deployment.
 
-To use it create an account at [shuttle](https://console.shuttle.rs/login).
+To use it create an account at [shuttle.dev](https://console.shuttle.dev/signup).
 
 Install `cargo-shuttle`:
 
@@ -90,9 +90,9 @@ shuttle deploy
 
 ## License
 
-The `easycar` project is distributed under the AGPL-3.0 license and the
-`info-car-api` crate is distributed under the LGPL-3.0 license. The license
-files are stored in the respective project roots.
+The `easycar` project is distributed under the AGPL-3.0 license and the `info-car-api` crate is
+distributed under the LGPL-3.0 license. The license files are stored in the respective project
+roots.
 
 Copyright (C) 2024 Kamack38
 
