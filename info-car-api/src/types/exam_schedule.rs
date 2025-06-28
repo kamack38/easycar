@@ -17,7 +17,7 @@ pub struct Exam {
     #[serde(deserialize_with = "deserialize_number_from_string")]
     /// Exam price
     pub amount: i32,
-    pub additional_info: String,
+    pub additional_info: Option<String>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize)]
