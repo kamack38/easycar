@@ -548,7 +548,6 @@ dependencies = [
  "info-car-api",
  "log",
  "pretty_env_logger",
- "reqwest",
  "shuttle-runtime",
  "teloxide",
  "thiserror 2.0.11",
