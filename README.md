@@ -38,13 +38,13 @@ cargo install --git https://github.com/kamack38/easycar.git
 ## Building
 
 ```bash
-cargo build --release --bin easycar-service
+cargo build --release
 ```
 
 ## Running
 
 ```bash
-RUST_LOG="INFO" ./target/release/easycar-service
+RUST_LOG="INFO" cargo run --release
 ```
 
 ## Running as a daemon

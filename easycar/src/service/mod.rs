@@ -341,3 +341,14 @@ impl EasyCarService {
         Ok(())
     }
 }
+
+#[cfg(feature = "shuttle")]
+#[shuttle_runtime::async_trait]
+impl shuttle_runtime::Service for EasyCarService {
+    async fn bind(mut self, _addr: std::net::SocketAddr) -> Result<(), shuttle_runtime::Error> {
+        self.start()
+            .await
+            .expect("An error occurred while running the service!");
+        Ok(())
+    }
+}

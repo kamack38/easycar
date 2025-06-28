@@ -3,7 +3,7 @@ Description=EasyCar daemon - find the newest exams on info-car.pl
 After=network.target
 
 [Service]
-ExecStart=~/.cargo/bin/easycar-service
+ExecStart=~/.cargo/bin/easycar
 Restart=on-failure
 Environment=RUST_LOG=info
 
