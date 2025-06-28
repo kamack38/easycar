@@ -14,7 +14,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let pesel = dotenvy::var("PESEL")?;
     let phone_number = dotenvy::var("PHONE_NUMBER")?;
     let pkk = dotenvy::var("PKK")?;
-    let osk_id: u32 = 3;
+    let osk_id: u32 = dotenvy::var("OSK_ID")?.parse()?;
 
     let user_data = UserData::new(
         username,

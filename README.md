@@ -22,6 +22,8 @@ This is a repo for easy car - an app which finds the newest exams on
 To run this project and use the telegram bot you have to fill in the `Secrets.toml.example` file and
 then rename it to `Secrets.toml`.
 
+If you want to choose a proper `OSK_ID` for your exam centre you can use the [WORD to OSK_ID mapping](./WORD_to_OSK_ID_mapping.md).
+
 You can create your own bot using the [BotFather](https://t.me/botfather).
 
 ## Installing
