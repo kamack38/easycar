@@ -5,6 +5,6 @@ use serde::Deserialize;
 pub struct TheoryOrPracticeExam {
     pub exam_id: String,
     pub date: String,
-    pub additional_info: String,
+    pub additional_info: Option<String>,
     pub room: Option<String>,
 }
