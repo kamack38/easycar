@@ -19,6 +19,8 @@ This is a repo for easy car - an app which finds the newest exams on
 
 ## Prerequisites
 
+- [Rust](https://www.rust-lang.org/learn/get-started)
+
 To run this project and use the telegram bot you have to fill in the `Secrets.toml.example` file and
 then rename it to `Secrets.toml`.
 
