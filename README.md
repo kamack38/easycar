@@ -95,7 +95,8 @@ shuttle deploy
 
 I consider the project feature complete but if You are missing certain a feature please contribute.
 
-The only thing I may refactor is the logining in because it currently relys on a bug on the website.
+The only thing I may refactor is the logining in, because it currently depends on a bug on the
+website.
 
 ## License
 
