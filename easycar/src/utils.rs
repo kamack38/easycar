@@ -3,7 +3,7 @@ use chrono_tz::Europe::Warsaw;
 
 pub fn date_from_string(timestamp: &str) -> DateTime<Utc> {
     let naive_datetime = NaiveDateTime::parse_from_str(timestamp, "%Y-%m-%dT%H:%M:%S")
-        .expect("Failed to parse timestamp");
+        .expect(&format!("Failed to parse the timestamp '{}'", timestamp));
     let datetime_cest: DateTime<chrono_tz::Tz> =
         Warsaw.from_local_datetime(&naive_datetime).unwrap();
     datetime_cest.with_timezone(&Utc)
