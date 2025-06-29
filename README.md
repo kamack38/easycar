@@ -31,6 +31,9 @@ You can create your own bot using the [BotFather](https://t.me/botfather).
 
 ## Installing
 
+You can either compile this program yourself or use one of the provided binaries in the
+[release page](https://github.com/kamack38/easycar/releases/latest)
+
 ```bash
 cargo install --git https://github.com/kamack38/easycar.git
 ```
