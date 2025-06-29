@@ -9,6 +9,14 @@ pub fn date_from_string(timestamp: &str) -> DateTime<Utc> {
     datetime_cest.with_timezone(&Utc)
 }
 
+/// Returns a readable date with hours in bold and underlined. If it fails to convert the timestamp
+/// to a date returns the provided timestamp.
+pub fn readable_date_from_string(timestamp: String) -> String {
+    NaiveDateTime::parse_from_str(&timestamp, "%Y-%m-%dT%H:%M:%S")
+        .map(|date| date.format("<u><b>%H:%M</b></u>%e-%m-%Y").to_string())
+        .unwrap_or(timestamp)
+}
+
 pub fn readable_time_delta(duration: Duration) -> String {
     let days = duration.num_days();
     let hours = duration.num_hours() % 24;

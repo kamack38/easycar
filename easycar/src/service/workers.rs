@@ -1,6 +1,6 @@
 use crate::{
     client::{GetExamsError, InfoCarClient},
-    utils::date_from_string,
+    utils::{date_from_string, readable_date_from_string},
 };
 use chrono::{Duration as ChronoDuration, Utc};
 use info_car_api::error::EnrollError;
@@ -92,9 +92,12 @@ pub async fn scheduler(client: Arc<Mutex<InfoCarClient>>, bot: Arc<Bot>, chat_id
         let duration = date_from_string(&closest_exam.date)
             .signed_duration_since(Utc::now())
             .num_days();
+
+        let date = readable_date_from_string(closest_exam.date);
+
         let exam_message = format!(
-            "New exam is available! The next exam date is {} (in {} days) (ID: <code>{}</code>)",
-            closest_exam.date, duration, &last_exam_id
+            "New exam is available! The next exam date is {} (in <b>{}</b> days) (ID: <code>{}</code>)",
+            date, duration, &last_exam_id
         );
 
         log::info!("{exam_message}");

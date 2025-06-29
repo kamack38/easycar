@@ -6,7 +6,7 @@ use std::num::ParseIntError;
 use std::sync::Arc;
 
 use crate::client::{GetExamsError, InfoCarClient, NewClientError, UserData};
-use crate::utils::{date_from_string, readable_time_delta};
+use crate::utils::{date_from_string, readable_date_from_string, readable_time_delta};
 use chrono::{DateTime, Utc};
 use info_car_api::error::{EnrollError, GenericClientError};
 use info_car_api::types::ProfileIdType;
@@ -104,15 +104,15 @@ async fn handle_spinner_cmd(
             let exams = client.lock().await.get_nearest_exams(5).await?;
             Ok(format!(
                 "The available exams are:\n{}",
-                exams.iter().fold(String::new(), |mut output, exam| {
+                exams.into_iter().fold(String::new(), |mut output, exam| {
+                    let exam_in = date_from_string(&exam.date)
+                        .signed_duration_since(Utc::now())
+                        .num_days();
+                    let readable_date = readable_date_from_string(exam.date);
                     let _ = writeln!(
                         output,
-                        "Exam (<code>{}</code>): {} (in {} days)",
-                        exam.id,
-                        exam.date,
-                        date_from_string(&exam.date)
-                            .signed_duration_since(Utc::now())
-                            .num_days()
+                        "Exam (<code>{}</code>): {} (in <b>{}</b> days)",
+                        exam.id, readable_date, exam_in,
                     );
                     output
                 })
