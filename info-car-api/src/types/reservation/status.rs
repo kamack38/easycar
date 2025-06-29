@@ -38,7 +38,7 @@ impl fmt::Display for PossibleStatuses {
             PossibleStatuses::Cancelled => "Cancelled",
             PossibleStatuses::Unknown => "Unknown",
         };
-        write!(f, "{}", status_str)
+        write!(f, "{status_str}")
     }
 }
 

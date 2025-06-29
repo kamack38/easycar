@@ -44,6 +44,6 @@ impl fmt::Display for LicenseCategory {
             LicenseCategory::T => "T",
             LicenseCategory::PT => "PT",
         };
-        write!(f, "{}", category)
+        write!(f, "{category}")
     }
 }
