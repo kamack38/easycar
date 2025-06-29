@@ -1,5 +1,6 @@
 [package]
 name = "info-car-api"
+description = "An api client for info-car.pl"
 version = "0.1.0"
 edition = "2021"
 license = "LGPL-3.0-only"
@@ -8,7 +9,12 @@ license = "LGPL-3.0-only"
 chrono = { version = "0.4.40", features = ["serde"] }
 log = "0.4.26"
 regex = "1.11.1"
-reqwest = { version = "=0.12.15", default-features = false, features = ["json", "rustls-tls", "cookies", "charset"] }
+reqwest = { version = "=0.12.15", default-features = false, features = [
+  "json",
+  "rustls-tls",
+  "cookies",
+  "charset",
+] }
 rustls = "0.23.23"
 scraper = "0.23.1"
 serde = { version = "1.0.218", features = ["derive"] }
