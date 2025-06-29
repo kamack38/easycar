@@ -60,6 +60,9 @@ impl InfoCarClient {
             .login(&user_data.username, &user_data.password)
             .await?;
         let user_info = client.user_info().await?;
+
+        log::debug!("Got user info: {user_info:?}");
+
         Ok(Self {
             client,
             user_data,
@@ -83,7 +86,8 @@ impl InfoCarClient {
     }
 
     pub async fn refresh_token(&mut self) -> Result<DateTime<Utc>, LoginError> {
-        if self.client.refresh_token().await.is_err() {
+        if let Err(err) = self.client.refresh_token().await {
+            log::warn!("Refreshing token returned an error: {err}. Relogging");
             self.login().await
         } else {
             Ok(self
