@@ -4,7 +4,6 @@ description = "An api client for info-car.pl"
 version = "0.1.0"
 edition = "2021"
 license = "LGPL-3.0-only"
-publish = false
 
 [dependencies]
 chrono = { version = "0.4.40", features = ["serde"] }

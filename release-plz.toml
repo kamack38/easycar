@@ -1,0 +1,9 @@
+[[package]]
+name = "easycar"
+git_release_enable = true
+publish = false
+
+[[package]]
+name = "info-car-api"
+git_release_enable = true
+publish = false
