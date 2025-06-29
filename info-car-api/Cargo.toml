@@ -8,7 +8,7 @@ license = "LGPL-3.0-only"
 chrono = { version = "0.4.40", features = ["serde"] }
 log = "0.4.26"
 regex = "1.11.1"
-reqwest = { version = "0.12.12", features = ["json", "rustls-tls", "cookies"] }
+reqwest = { version = "=0.12.15", default-features = false, features = ["json", "rustls-tls", "cookies", "charset"] }
 rustls = "0.23.23"
 scraper = "0.23.1"
 serde = { version = "1.0.218", features = ["derive"] }
