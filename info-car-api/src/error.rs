@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use regex::Regex;
-use reqwest::Response;
+use reqwest::{header::WWW_AUTHENTICATE, Response};
 use thiserror::Error;
 use url;
 
@@ -123,7 +123,7 @@ pub fn handle_response(response: Response) -> Result<Response, JWTError> {
     if response.status() == 401 {
         let error_header = response
             .headers()
-            .get("www-authenticate")
+            .get(WWW_AUTHENTICATE)
             .expect("Header not found")
             .to_str()
             .unwrap_or("Failed to convert HeaderValue to string");
