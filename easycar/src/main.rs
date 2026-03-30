@@ -7,7 +7,7 @@ use info_car_api::types::ProfileIdType;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     pretty_env_logger::init();
-    dotenvy::from_filename("Secrets.toml")?;
+    dotenvy::from_filename_override("Secrets.toml")?;
 
     // Get UserData
     let username = dotenvy::var("USERNAME")?;
