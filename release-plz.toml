@@ -1,9 +1,10 @@
-[[package]]
-name = "easycar"
+[workspace]
 git_release_enable = true
+git_only = true
 publish = false
 
 [[package]]
+name = "easycar"
+
+[[package]]
 name = "info-car-api"
-git_release_enable = true
-publish = false
